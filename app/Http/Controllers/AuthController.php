@@ -100,4 +100,11 @@ class AuthController extends Controller
     {
         return view('dashboard');
     }
+
+    public function checkAuth()
+    {
+        return response()->json([
+            'authenticated' => Auth::check()
+        ]);
+    }
 }
