@@ -98,19 +98,31 @@ class JobApplicationController extends Controller
         return view('applications.index', compact('applications', 'stats'));
     }
 
-    public function show(JobApplication $application)
+    public function show(Request $request, JobApplication $application)
     {
-        $this->authorize('view', $application);
+        // Check if the application belongs to the authenticated user
+        if ($application->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to this application.');
+        }
         
-        return response()->json([
-            'success' => true,
-            'data' => $application
-        ]);
+        // If this is an API request, return JSON
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => $application
+            ]);
+        }
+        
+        // Otherwise return the view
+        return view('applications.show', compact('application'));
     }
 
     public function update(Request $request, JobApplication $application)
     {
-        $this->authorize('update', $application);
+        // Check if the application belongs to the authenticated user
+        if ($application->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to this application.');
+        }
 
         $request->validate([
             'status' => 'required|in:applied,interviewing,offer,rejected,withdrawn',
@@ -127,7 +139,10 @@ class JobApplicationController extends Controller
 
     public function destroy(JobApplication $application)
     {
-        $this->authorize('delete', $application);
+        // Check if the application belongs to the authenticated user
+        if ($application->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to this application.');
+        }
 
         // Delete associated files
         if ($application->resume_path) {

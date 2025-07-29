@@ -221,7 +221,7 @@
             transform: translateY(-2px);
         }
 
-        .sort-controls {
+        .sort-controls, .sort-buttons {
             display: flex;
             gap: 1rem;
             align-items: center;
@@ -254,9 +254,9 @@
         .sort-btn:hover,
         .sort-btn.active {
             border-color: #2d3e2e;
-            background: rgba(255, 255, 255, 0.9);
+            background: #2d3e2e;
             transform: translateY(-2px);
-            color: #2d3e2e;
+            color: white;
         }
 
         .sort-arrow {
@@ -569,6 +569,18 @@
                 align-items: center;
             }
             
+            .sort-label {
+                font-size: 0.85rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .sort-buttons {
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
             .sort-btn {
                 padding: 0.6rem 1rem;
                 font-size: 0.85rem;
@@ -714,18 +726,20 @@
                 </div>
                 <div class="sort-controls">
                     <span class="sort-label">Sort by:</span>
-                    <a href="{{ route('applications.index', array_merge(request()->all(), ['sort' => 'date', 'direction' => request('sort') == 'date' && request('direction') == 'asc' ? 'desc' : 'asc'])) }}" 
-                       class="sort-btn {{ request('sort') == 'date' || (!request('sort')) ? 'active' : '' }} {{ request('direction') == 'desc' || (!request('direction')) ? 'desc' : '' }}">
-                        Date <span class="sort-arrow">↑</span>
-                    </a>
-                    <a href="{{ route('applications.index', array_merge(request()->all(), ['sort' => 'company', 'direction' => request('sort') == 'company' && request('direction') == 'asc' ? 'desc' : 'asc'])) }}" 
-                       class="sort-btn {{ request('sort') == 'company' ? 'active' : '' }} {{ request('direction') == 'desc' ? 'desc' : '' }}">
-                        Company <span class="sort-arrow">↑</span>
-                    </a>
-                    <a href="{{ route('applications.index', array_merge(request()->all(), ['sort' => 'status', 'direction' => request('sort') == 'status' && request('direction') == 'asc' ? 'desc' : 'asc'])) }}" 
-                       class="sort-btn {{ request('sort') == 'status' ? 'active' : '' }} {{ request('direction') == 'desc' ? 'desc' : '' }}">
-                        Status <span class="sort-arrow">↑</span>
-                    </a>
+                    <div class="sort-buttons">
+                        <a href="{{ route('applications.index', array_merge(request()->all(), ['sort' => 'date', 'direction' => request('sort') == 'date' && request('direction') == 'asc' ? 'desc' : 'asc'])) }}" 
+                           class="sort-btn {{ request('sort') == 'date' || (!request('sort')) ? 'active' : '' }} {{ request('direction') == 'desc' || (!request('direction')) ? 'desc' : '' }}">
+                            Date <span class="sort-arrow">↑</span>
+                        </a>
+                        <a href="{{ route('applications.index', array_merge(request()->all(), ['sort' => 'company', 'direction' => request('sort') == 'company' && request('direction') == 'asc' ? 'desc' : 'asc'])) }}" 
+                           class="sort-btn {{ request('sort') == 'company' ? 'active' : '' }} {{ request('direction') == 'desc' ? 'desc' : '' }}">
+                            Company <span class="sort-arrow">↑</span>
+                        </a>
+                        <a href="{{ route('applications.index', array_merge(request()->all(), ['sort' => 'status', 'direction' => request('sort') == 'status' && request('direction') == 'asc' ? 'desc' : 'asc'])) }}" 
+                           class="sort-btn {{ request('sort') == 'status' ? 'active' : '' }} {{ request('direction') == 'desc' ? 'desc' : '' }}">
+                            Status <span class="sort-arrow">↑</span>
+                        </a>
+                    </div>
                 </div>
             </div>
             
@@ -789,16 +803,14 @@
 
     <script>
         function showApplicationDetails(applicationId) {
-            // For now, just log the ID. Later can implement modal or detail page
-            console.log('Application details for ID:', applicationId);
-            // You could redirect to a detail page or open a modal here
-            // window.location.href = `/applications/${applicationId}`;
+            window.location.href = `/applications/${applicationId}`;
         }
 
-        // Add loading animation to cards
+        // Add loading animation to cards and initialize sort arrows
         document.addEventListener('DOMContentLoaded', function() {
             const cards = document.querySelectorAll('.application-card');
             
+            // Animate cards on load
             cards.forEach((card, index) => {
                 card.style.opacity = '0';
                 card.style.transform = 'translateY(20px)';
@@ -809,6 +821,99 @@
                     card.style.transform = 'translateY(0)';
                 }, index * 100);
             });
+            
+            // Initialize sort arrows based on current URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentSort = urlParams.get('sort') || 'date';
+            const currentDirection = urlParams.get('direction') || 'desc';
+            
+            // Update sort button arrows
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                const arrow = btn.querySelector('.sort-arrow');
+                if (btn.href.includes(`sort=${currentSort}`)) {
+                    if (currentDirection === 'desc') {
+                        btn.classList.add('desc');
+                        arrow.textContent = '↓';
+                    } else {
+                        btn.classList.remove('desc');
+                        arrow.textContent = '↑';
+                    }
+                }
+            });
+            
+            // Add smooth transitions for filter buttons
+            document.querySelectorAll('.filter-btn, .sort-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Add a subtle animation feedback
+                    this.style.transform = 'scale(0.98)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 100);
+                });
+            });
+            
+            // Add keyboard navigation
+            document.addEventListener('keydown', function(e) {
+                // Allow quick navigation with number keys
+                if (e.altKey) {
+                    switch(e.key) {
+                        case '1':
+                            e.preventDefault();
+                            window.location.href = '{{ route("applications.index") }}';
+                            break;
+                        case '2':
+                            e.preventDefault();
+                            window.location.href = '{{ route("applications.index", ["filter" => "applied"]) }}';
+                            break;
+                        case '3':
+                            e.preventDefault();
+                            window.location.href = '{{ route("applications.index", ["filter" => "interviewing"]) }}';
+                            break;
+                        case '4':
+                            e.preventDefault();
+                            window.location.href = '{{ route("applications.index", ["filter" => "offer"]) }}';
+                            break;
+                        case '5':
+                            e.preventDefault();
+                            window.location.href = '{{ route("applications.index", ["filter" => "rejected"]) }}';
+                            break;
+                    }
+                }
+            });
+            
+            // Add touch feedback for mobile
+            if ('ontouchstart' in window) {
+                document.querySelectorAll('.application-card').forEach(card => {
+                    card.addEventListener('touchstart', function() {
+                        this.style.transform = 'scale(0.98)';
+                    });
+                    
+                    card.addEventListener('touchend', function() {
+                        setTimeout(() => {
+                            this.style.transform = '';
+                        }, 100);
+                    });
+                });
+            }
+            
+            // Initialize performance observer for smooth scrolling
+            if ('IntersectionObserver' in window) {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.style.opacity = '1';
+                            entry.target.style.transform = 'translateY(0)';
+                        }
+                    });
+                }, {
+                    threshold: 0.1,
+                    rootMargin: '50px'
+                });
+
+                cards.forEach(card => {
+                    observer.observe(card);
+                });
+            }
         });
     </script>
 </body>
