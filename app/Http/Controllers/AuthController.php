@@ -98,7 +98,16 @@ class AuthController extends Controller
 
     public function dashboard()
     {
-        return view('dashboard');
+        // Calculate statistics for the dashboard
+        $userApplications = Auth::user()->jobApplications();
+        $stats = [
+            'total' => $userApplications->count(),
+            'applied' => $userApplications->where('status', 'applied')->count(),
+            'interviewing' => $userApplications->where('status', 'interviewing')->count(),
+            'offers' => $userApplications->where('status', 'offer')->count(),
+        ];
+        
+        return view('dashboard', compact('stats'));
     }
 
     public function checkAuth()
