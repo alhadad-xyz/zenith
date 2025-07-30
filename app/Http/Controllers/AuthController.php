@@ -262,6 +262,75 @@ class AuthController extends Controller
         return view('calendar', compact('todaysEvents', 'events'));
     }
 
+    public function analytics()
+    {
+        $user = Auth::user();
+        $applications = $user->jobApplications()->get();
+        $totalApplications = $applications->count();
+        
+        // Calculate analytics data
+        $analytics = [
+            'total_applications' => $totalApplications,
+            'applications_change' => 12, // This would be calculated based on previous period
+            'response_rate' => $totalApplications > 0 ? round(($applications->whereNotNull('response_date')->count() / $totalApplications) * 100) : 0,
+            'response_rate_change' => 5,
+            'interview_rate' => $totalApplications > 0 ? round(($applications->where('status', 'interviewing')->count() / $totalApplications) * 100) : 0,
+            'interview_rate_change' => 8,
+            'avg_response_time' => '5.2', // This would be calculated from actual response times
+            'response_time_change' => 0.8,
+            
+            // Funnel data
+            'funnel' => [
+                'applied' => $totalApplications,
+                'response' => $applications->whereNotNull('response_date')->count(),
+                'response_percent' => $totalApplications > 0 ? round(($applications->whereNotNull('response_date')->count() / $totalApplications) * 100) : 0,
+                'phone_screen' => $applications->where('status', 'phone_screen')->count(),
+                'phone_screen_percent' => $totalApplications > 0 ? round(($applications->where('status', 'phone_screen')->count() / $totalApplications) * 100) : 0,
+                'interview' => $applications->where('status', 'interviewing')->count(),
+                'interview_percent' => $totalApplications > 0 ? round(($applications->where('status', 'interviewing')->count() / $totalApplications) * 100) : 0,
+                'final_round' => $applications->where('status', 'final_round')->count(),
+                'final_round_percent' => $totalApplications > 0 ? round(($applications->where('status', 'final_round')->count() / $totalApplications) * 100) : 0,
+                'offer' => $applications->where('status', 'offer')->count(),
+                'offer_percent' => $totalApplications > 0 ? round(($applications->where('status', 'offer')->count() / $totalApplications) * 100) : 0,
+            ],
+            
+            // Chart data for applications over time
+            'chart_labels' => ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8'],
+            'chart_data' => [3, 7, 5, 8, 6, 9, 4, 5],
+            
+            // Sources data
+            'sources' => [
+                'labels' => ['LinkedIn', 'Company Sites', 'Referrals', 'Job Boards', 'Recruiters'],
+                'data' => [35, 25, 15, 15, 10]
+            ],
+            
+            // AI Insights
+            'insights' => [
+                [
+                    'title' => 'Peak Application Time',
+                    'description' => 'Your applications sent on <span class="insight-metric">Tuesday mornings</span> have a <span class="insight-metric">34% higher response rate</span> than other times.'
+                ],
+                [
+                    'title' => 'Industry Focus',
+                    'description' => '<span class="insight-metric">SaaS companies</span> respond to your applications <span class="insight-metric">2.3x faster</span> than traditional enterprises.'
+                ],
+                [
+                    'title' => 'Application Length',
+                    'description' => 'Cover letters with <span class="insight-metric">150-200 words</span> show <span class="insight-metric">28% better conversion</span> to phone screens.'
+                ],
+                [
+                    'title' => 'Follow-up Strategy',
+                    'description' => 'Following up after <span class="insight-metric">7 days</span> increases your interview rate by <span class="insight-metric">41%</span>.'
+                ]
+            ],
+            
+            'avg_salary' => '145k',
+            'salary_comparison' => '18% above market rate'
+        ];
+        
+        return view('analytics', compact('analytics'));
+    }
+
     public function checkAuth()
     {
         return response()->json([

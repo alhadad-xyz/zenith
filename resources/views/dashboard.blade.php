@@ -866,7 +866,7 @@
             </div>
 
             <!-- Progress Ring -->
-            <div class="card progress-ring">
+            <div class="card progress-ring" onclick="window.location.href='{{ route('analytics') }}'" style="cursor: pointer;">
                 <div class="ring-container">
                     <div class="ring">
                         <div class="ring-content">
@@ -875,7 +875,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="ai-insight">AI suggests focusing on follow-ups this week</div>
+                <div class="ai-insight">Click to view detailed analytics</div>
             </div>
 
             <!-- Task Panel -->

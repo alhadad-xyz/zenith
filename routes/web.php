@@ -21,6 +21,7 @@ Route::get('/api/auth/check', [AuthController::class, 'checkAuth'])->name('auth.
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
     Route::get('/calendar', [AuthController::class, 'calendar'])->name('calendar');
+    Route::get('/analytics', [AuthController::class, 'analytics'])->name('analytics');
     
     // Job Application routes
     Route::resource('applications', JobApplicationController::class)->except(['edit', 'create']);
