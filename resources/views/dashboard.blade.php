@@ -898,22 +898,24 @@
             </div>
 
             <!-- Timeline Panel -->
-            <div class="card timeline-panel">
+            <div class="card timeline-panel" onclick="window.location.href='{{ route('calendar') }}'">
                 <h3 class="stage-title">Upcoming</h3>
-                <div class="timeline-item">
-                    <div class="timeline-date">Jul 22</div>
-                    <div class="timeline-content">
-                        <div class="timeline-title">Technical Interview</div>
-                        <div class="timeline-company">Figma</div>
+                @if($upcomingEvents->count() > 0)
+                    @foreach($upcomingEvents as $event)
+                        <div class="timeline-item">
+                            <div class="timeline-date">{{ $event['date'] }}</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">{{ $event['title'] }}</div>
+                                <div class="timeline-company">{{ $event['company'] }}</div>
+                            </div>
+                        </div>
+                    @endforeach
+                @else
+                    <div style="text-align: center; padding: 2rem; color: #6b7c6d; font-style: italic;">
+                        No upcoming events.<br>
+                        <small>Click to view calendar</small>
                     </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-date">Jul 24</div>
-                    <div class="timeline-content">
-                        <div class="timeline-title">Final Round</div>
-                        <div class="timeline-company">Notion</div>
-                    </div>
-                </div>
+                @endif
             </div>
 
             <!-- Offer Stage -->
@@ -1195,6 +1197,33 @@
                         <div class="form-group">
                             <label class="form-label">Application Notes</label>
                             <textarea class="form-textarea" placeholder="Add any notes about this application, referrals, or next steps..." name="application_notes"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Interview Date (Optional)</label>
+                                <input type="datetime-local" class="form-input" name="interview_date">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Application Deadline (Optional)</label>
+                                <input type="datetime-local" class="form-input" name="application_deadline">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Interview Type (Optional)</label>
+                                <select class="form-select" name="interview_type">
+                                    <option value="">Select type</option>
+                                    <option value="phone">Phone Screen</option>
+                                    <option value="video">Video Call</option>
+                                    <option value="in-person">In-Person</option>
+                                    <option value="technical">Technical</option>
+                                    <option value="final">Final Round</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Follow-up Date (Optional)</label>
+                                <input type="datetime-local" class="form-input" name="follow_up_date">
+                            </div>
                         </div>
                     </div>
 

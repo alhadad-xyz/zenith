@@ -20,6 +20,7 @@ Route::get('/api/auth/check', [AuthController::class, 'checkAuth'])->name('auth.
 // Protected routes
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
+    Route::get('/calendar', [AuthController::class, 'calendar'])->name('calendar');
     
     // Job Application routes
     Route::resource('applications', JobApplicationController::class)->except(['edit', 'create']);

@@ -23,10 +23,19 @@ class JobApplication extends Model
         'application_notes',
         'status',
         'applied_date',
+        'interview_date',
+        'application_deadline',
+        'follow_up_date',
+        'interview_notes',
+        'interview_type',
+        'interview_location',
     ];
 
     protected $casts = [
         'applied_date' => 'date',
+        'interview_date' => 'datetime',
+        'application_deadline' => 'datetime',
+        'follow_up_date' => 'datetime',
     ];
 
     public function user(): BelongsTo

@@ -107,7 +107,159 @@ class AuthController extends Controller
             'offers' => $userApplications->where('status', 'offer')->count(),
         ];
         
-        return view('dashboard', compact('stats'));
+        // Get upcoming events for timeline
+        $upcomingEvents = collect();
+        $applications = $userApplications->get();
+        $now = now();
+        
+        foreach ($applications as $application) {
+            // Upcoming interviews
+            if ($application->interview_date && $application->interview_date->gt($now)) {
+                $upcomingEvents->push([
+                    'date' => $application->interview_date->format('M j'),
+                    'title' => ($application->interview_type ? ucfirst($application->interview_type) : 'Interview'),
+                    'company' => $application->company_name,
+                    'type' => 'interview'
+                ]);
+            }
+            
+            // Upcoming deadlines
+            if ($application->application_deadline && $application->application_deadline->gt($now)) {
+                $upcomingEvents->push([
+                    'date' => $application->application_deadline->format('M j'),
+                    'title' => 'Application Deadline',
+                    'company' => $application->company_name,
+                    'type' => 'deadline'
+                ]);
+            }
+            
+            // Upcoming follow-ups
+            if ($application->follow_up_date && $application->follow_up_date->gt($now)) {
+                $upcomingEvents->push([
+                    'date' => $application->follow_up_date->format('M j'),
+                    'title' => 'Follow Up',
+                    'company' => $application->company_name,
+                    'type' => 'followup'
+                ]);
+            }
+        }
+        
+        // Sort by date and take first 3
+        $upcomingEvents = $upcomingEvents->sortBy(function ($event) {
+            return \Carbon\Carbon::createFromFormat('M j', $event['date'])->dayOfYear;
+        })->take(3);
+        
+        return view('dashboard', compact('stats', 'upcomingEvents'));
+    }
+
+    public function calendar()
+    {
+        $user = Auth::user();
+        $applications = $user->jobApplications()->get();
+        
+        // Get today's events
+        $today = now()->startOfDay();
+        $todaysEvents = collect();
+        
+        foreach ($applications as $application) {
+            // Interview events
+            if ($application->interview_date && $application->interview_date->startOfDay()->equalTo($today)) {
+                $todaysEvents->push((object) [
+                    'type' => 'interview',
+                    'title' => ($application->interview_type ? ucfirst($application->interview_type) : 'Interview'),
+                    'company' => $application->company_name,
+                    'position' => $application->job_title,
+                    'time' => $application->interview_date->format('g:i A'),
+                    'location' => $application->interview_location
+                ]);
+            }
+            
+            // Application deadline events
+            if ($application->application_deadline && $application->application_deadline->startOfDay()->equalTo($today)) {
+                $todaysEvents->push((object) [
+                    'type' => 'deadline',
+                    'title' => 'Application Deadline',
+                    'company' => $application->company_name,
+                    'position' => $application->job_title,
+                    'time' => $application->application_deadline->format('g:i A')
+                ]);
+            }
+            
+            // Follow-up events
+            if ($application->follow_up_date && $application->follow_up_date->startOfDay()->equalTo($today)) {
+                $todaysEvents->push((object) [
+                    'type' => 'application',
+                    'title' => 'Follow Up',
+                    'company' => $application->company_name,
+                    'position' => $application->job_title,
+                    'time' => $application->follow_up_date->format('g:i A')
+                ]);
+            }
+        }
+
+        // Organize events by date for calendar display
+        $events = [];
+        
+        foreach ($applications as $application) {
+            // Interview events
+            if ($application->interview_date) {
+                $dateKey = $application->interview_date->format('Y-m-d');
+                if (!isset($events[$dateKey])) {
+                    $events[$dateKey] = [];
+                }
+                $events[$dateKey][] = [
+                    'type' => 'interview',
+                    'title' => ($application->interview_type ? ucfirst($application->interview_type) . ' Interview' : 'Interview'),
+                    'company' => $application->company_name . ' - ' . $application->job_title,
+                    'time' => $application->interview_date->format('g:i A'),
+                    'location' => $application->interview_location
+                ];
+            }
+            
+            // Application deadline events
+            if ($application->application_deadline) {
+                $dateKey = $application->application_deadline->format('Y-m-d');
+                if (!isset($events[$dateKey])) {
+                    $events[$dateKey] = [];
+                }
+                $events[$dateKey][] = [
+                    'type' => 'deadline',
+                    'title' => 'Application Deadline',
+                    'company' => $application->company_name . ' - ' . $application->job_title,
+                    'time' => $application->application_deadline->format('g:i A')
+                ];
+            }
+            
+            // Follow-up events
+            if ($application->follow_up_date) {
+                $dateKey = $application->follow_up_date->format('Y-m-d');
+                if (!isset($events[$dateKey])) {
+                    $events[$dateKey] = [];
+                }
+                $events[$dateKey][] = [
+                    'type' => 'application',
+                    'title' => 'Follow Up',
+                    'company' => $application->company_name . ' - ' . $application->job_title,
+                    'time' => $application->follow_up_date->format('g:i A')
+                ];
+            }
+            
+            // Add applied date as application event
+            if ($application->applied_date) {
+                $dateKey = $application->applied_date->format('Y-m-d');
+                if (!isset($events[$dateKey])) {
+                    $events[$dateKey] = [];
+                }
+                $events[$dateKey][] = [
+                    'type' => 'application',
+                    'title' => 'Application Submitted',
+                    'company' => $application->company_name . ' - ' . $application->job_title,
+                    'time' => 'All Day'
+                ];
+            }
+        }
+        
+        return view('calendar', compact('todaysEvents', 'events'));
     }
 
     public function checkAuth()
