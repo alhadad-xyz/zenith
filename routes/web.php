@@ -24,5 +24,5 @@ Route::middleware('auth')->group(function () {
     Route::get('/analytics', [AuthController::class, 'analytics'])->name('analytics');
     
     // Job Application routes
-    Route::resource('applications', JobApplicationController::class)->except(['edit', 'create']);
+    Route::resource('applications', JobApplicationController::class)->except(['create']);
 });

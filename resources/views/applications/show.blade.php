@@ -762,7 +762,7 @@
                             <div class="document-size">
                                 @php
                                     try {
-                                        $size = Storage::size('public/' . $application->resume_path);
+                                        $size = \Illuminate\Support\Facades\Storage::disk('public')->size($application->resume_path);
                                         echo number_format($size / 1024, 0) . ' KB';
                                     } catch (Exception $e) {
                                         echo 'File size unavailable';
@@ -781,7 +781,7 @@
                             <div class="document-size">
                                 @php
                                     try {
-                                        $size = Storage::size('public/' . $application->cover_letter_path);
+                                        $size = \Illuminate\Support\Facades\Storage::disk('public')->size($application->cover_letter_path);
                                         echo number_format($size / 1024, 0) . ' KB';
                                     } catch (Exception $e) {
                                         echo 'File size unavailable';
@@ -806,8 +806,8 @@
 
                 <!-- Actions -->
                 <div class="action-buttons">
-                    <a href="{{ route('applications.index') }}" class="btn btn-secondary">
-                        Back to Applications
+                    <a href="{{ route('applications.edit', $application) }}" class="btn btn-secondary">
+                        Edit Application
                     </a>
                     <button class="btn btn-primary" onclick="updateStatus()">
                         Update Status
