@@ -40,10 +40,19 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 100;
     margin: 0 1rem;
+    /* Ensure backdrop filter works */
+    isolation: isolate;
+}
+
+/* Add body margin to account for fixed navbar */
+body {
+    padding-top: 100px; /* Adjust based on navbar height */
 }
 
 .navbar::before {

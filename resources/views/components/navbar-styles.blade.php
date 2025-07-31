@@ -1,8 +1,8 @@
 <style>
     .navbar {
         background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(30px);
         -webkit-backdrop-filter: blur(30px);
+        backdrop-filter: blur(30px);
         border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 0 0 24px 24px;
         padding: 1.5rem 2rem;
@@ -10,10 +10,14 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        position: sticky;
+        position: fixed;
         top: 0;
+        left: 0;
+        right: 0;
         z-index: 100;
         margin: 0 1rem;
+        /* Ensure backdrop filter works */
+        isolation: isolate;
     }
 
     .navbar::before {
@@ -109,6 +113,7 @@
         box-shadow: 0 16px 48px rgba(255, 107, 107, 0.4);
         background: linear-gradient(135deg, #ff5252 0%, #ff4444 100%);
     }
+
 
     /* Responsive Design */
     @media (max-width: 968px) {

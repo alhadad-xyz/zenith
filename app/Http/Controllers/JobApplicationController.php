@@ -43,6 +43,15 @@ class JobApplicationController extends Controller
 
         $application = JobApplication::create($data);
 
+        // Create application submitted event
+        $application->events()->create([
+            'type' => 'application_submitted',
+            'title' => 'Application Submitted',
+            'description' => "Applied to {$application->job_title} position at {$application->company_name}",
+            'event_date' => now()->toDateString(),
+            'priority' => 'normal',
+        ]);
+
         return response()->json([
             'success' => true,
             'data' => $application,
@@ -146,7 +155,15 @@ class JobApplicationController extends Controller
                 'status' => 'required|in:applied,interviewing,offer,rejected,withdrawn',
             ]);
 
+            $oldStatus = $application->status;
+            $newStatus = $request->input('status');
+            
             $application->update($request->all());
+
+            // Create event for status change
+            if ($oldStatus !== $newStatus) {
+                $this->createStatusChangeEvent($application, $oldStatus, $newStatus);
+            }
 
             return response()->json([
                 'success' => true,
@@ -348,6 +365,41 @@ class JobApplicationController extends Controller
                 'application_status' => $application->fresh()->status,
                 'created_at' => $event->created_at,
             ]
+        ]);
+    }
+
+    private function createStatusChangeEvent(JobApplication $application, $oldStatus, $newStatus)
+    {
+        $eventTypes = [
+            'applied' => 'application_submitted',
+            'interviewing' => 'interview_scheduled',
+            'offer' => 'offer_received',
+            'rejected' => 'rejection_received',
+            'withdrawn' => 'application_withdrawn',
+        ];
+
+        $eventTitles = [
+            'applied' => 'Application Status Updated',
+            'interviewing' => 'Interview Stage',
+            'offer' => 'Offer Received',
+            'rejected' => 'Application Rejected',
+            'withdrawn' => 'Application Withdrawn',
+        ];
+
+        $eventDescriptions = [
+            'applied' => 'Application status changed to applied',
+            'interviewing' => 'Application moved to interview stage',
+            'offer' => 'Offer received from ' . $application->company_name,
+            'rejected' => 'Application was rejected',
+            'withdrawn' => 'Application was withdrawn',
+        ];
+
+        $application->events()->create([
+            'type' => $eventTypes[$newStatus] ?? 'status_change',
+            'title' => $eventTitles[$newStatus] ?? 'Status Updated',
+            'description' => $eventDescriptions[$newStatus] ?? "Status changed from {$oldStatus} to {$newStatus}",
+            'event_date' => now()->toDateString(),
+            'priority' => $newStatus === 'offer' ? 'high' : 'normal',
         ]);
     }
 

@@ -202,41 +202,6 @@
             background: linear-gradient(135deg, rgba(240, 229, 224, 0.2) 0%, rgba(232, 242, 232, 0.2) 100%);
         }
 
-        .activity-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0.75rem;
-            padding: 0.5rem;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            transition: all 0.2s ease;
-        }
-
-        .activity-item:hover {
-            background: rgba(255, 255, 255, 0.5);
-            transform: translateX(4px);
-        }
-
-        .activity-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #ff6b6b;
-            margin-right: 0.75rem;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .activity-text {
-            font-size: 0.9rem;
-            color: #2d3e2e;
-            font-weight: 500;
-        }
-
         .insights-panel {
             grid-column: 1 / 13;
             grid-row: 8 / 9;
@@ -265,46 +230,6 @@
             grid-column: 1 / 5;
             grid-row: 4 / 6;
             background: linear-gradient(135deg, rgba(232, 242, 232, 0.3) 0%, rgba(255, 255, 255, 0.4) 100%);
-        }
-
-        .task-list {
-            margin-top: 1rem;
-        }
-
-        .task-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0.75rem;
-            padding: 0.75rem;
-            background: rgba(255, 255, 255, 0.4);
-            border-radius: 12px;
-            transition: all 0.2s ease;
-        }
-
-        .task-item:hover {
-            background: rgba(255, 255, 255, 0.6);
-            transform: translateY(-2px);
-        }
-
-        .task-checkbox {
-            width: 16px;
-            height: 16px;
-            border: 2px solid #6b7c6d;
-            border-radius: 4px;
-            margin-right: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .task-checkbox.checked {
-            background: #ff6b6b;
-            border-color: #ff6b6b;
-        }
-
-        .task-text {
-            font-size: 0.9rem;
-            color: #2d3e2e;
-            font-weight: 500;
         }
 
         .timeline-panel {
@@ -628,7 +553,7 @@
                 <div class="ring-container">
                     <div class="ring">
                         <div class="ring-content">
-                            <div class="ring-percentage">70%</div>
+                            <div class="ring-percentage">{{ $quickStats['progress_percentage'] }}%</div>
                             <div class="ring-label">Progress</div>
                         </div>
                     </div>
@@ -636,24 +561,11 @@
                 <div class="ai-insight">Click to view detailed analytics</div>
             </div>
 
-            <!-- Task Panel -->
-            <div class="card task-panel">
-                <h3 class="stage-title">Today's Focus</h3>
-                <div class="task-list">
-                    <div class="task-item">
-                        <div class="task-checkbox"></div>
-                        <span class="task-text">Follow up with Stripe</span>
-                    </div>
-                    <div class="task-item">
-                        <div class="task-checkbox checked"></div>
-                        <span class="task-text">Prepare for Meta interview</span>
-                    </div>
-                    <div class="task-item">
-                        <div class="task-checkbox"></div>
-                        <span class="task-text">Update portfolio</span>
-                    </div>
-                </div>
-            </div>
+            <!-- Today's Focus Panel -->
+            <x-today-focus-card 
+                :tasks="$todayTasks ?? []"
+                class="task-panel"
+            />
 
             <!-- Timeline Panel -->
             <div class="card timeline-panel" onclick="window.location.href='{{ route('calendar') }}'">
@@ -688,39 +600,28 @@
             </x-stat-card>
 
             <!-- Recent Activity -->
-            <div class="card recent-activity">
-                <h3 class="stage-title">Activity</h3>
-                <div class="activity-item">
-                    <div class="activity-dot"></div>
-                    <span class="activity-text">Interview scheduled with Airbnb</span>
-                </div>
-                <div class="activity-item">
-                    <div class="activity-dot"></div>
-                    <span class="activity-text">Application viewed by Linear</span>
-                </div>
-                <div class="activity-item">
-                    <div class="activity-dot"></div>
-                    <span class="activity-text">Offer received from Vercel</span>
-                </div>
-            </div>
+            <x-activity-card 
+                :activities="$recentActivities ?? []"
+                class="recent-activity"
+            />
 
             <!-- Quick Stats -->
             <div class="card quick-stats">
                 <div class="stats-grid">
                     <div class="stat-item">
-                        <div class="stat-number">89%</div>
+                        <div class="stat-number">{{ $quickStats['response_rate'] }}%</div>
                         <div class="stat-label">Response Rate</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-number">12</div>
+                        <div class="stat-number">{{ $quickStats['avg_response_days'] }}</div>
                         <div class="stat-label">Days Avg</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-number">$145k</div>
+                        <div class="stat-number">{{ $quickStats['avg_offer'] }}</div>
                         <div class="stat-label">Avg Offer</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-number">4.8</div>
+                        <div class="stat-number">{{ $quickStats['match_score'] }}</div>
                         <div class="stat-label">Match Score</div>
                     </div>
                 </div>
@@ -736,11 +637,14 @@
         </div>
     </div>
 
+    <!-- Add Task Modal -->
+    <x-add-task-modal :jobApplications="$jobApplications" />
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const ring = document.querySelector('.ring');
             let progress = 0;
-            const targetProgress = 70;
+            const targetProgress = {{ $quickStats['progress_percentage'] }};
             
             const animateProgress = () => {
                 if (progress < targetProgress) {
@@ -762,8 +666,10 @@
 
             const cards = document.querySelectorAll('.card');
             cards.forEach(card => {
-                // Skip hover effects for insights-panel to prevent button interference
-                if (card.classList.contains('insights-panel')) {
+                // Skip hover effects for panels with interactive buttons to prevent interference
+                if (card.classList.contains('insights-panel') || 
+                    card.classList.contains('task-panel') ||
+                    card.classList.contains('recent-activity')) {
                     return;
                 }
                 
@@ -805,6 +711,227 @@
                     element.style.transform = `translate(${xPos}px, ${yPos}px)`;
                 });
             });
+
+            // Refresh tasks on page load if refreshTasks function exists
+            if (typeof refreshTasks === 'function') {
+                refreshTasks();
+            }
+        });
+
+        // Task Modal Functions (moved here to ensure they're available)
+        function openTaskModal() {
+            console.log('Opening task modal...');
+            const modal = document.getElementById('addTaskModal');
+            console.log('Modal element found:', modal);
+            
+            if (modal) {
+                modal.style.display = 'flex';
+                
+                // Focus on the title input
+                setTimeout(() => {
+                    const titleInput = document.getElementById('taskTitle');
+                    if (titleInput) titleInput.focus();
+                }, 100);
+                
+                // Set default due date to today
+                const today = new Date();
+                const todayString = today.toISOString().slice(0, 16);
+                const dueDateInput = document.getElementById('taskDueDate');
+                if (dueDateInput) dueDateInput.value = todayString;
+            } else {
+                console.error('Task modal not found! Make sure the modal component is included.');
+                alert('Task modal not found. Please check the page setup.');
+            }
+        }
+
+        function closeTaskModal() {
+            const modal = document.getElementById('addTaskModal');
+            if (modal) {
+                modal.style.display = 'none';
+                
+                // Reset form
+                const form = document.getElementById('addTaskForm');
+                if (form) form.reset();
+                clearTaskErrors();
+            }
+        }
+
+        function clearTaskErrors() {
+            document.querySelectorAll('.task-form-error').forEach(error => {
+                error.textContent = '';
+            });
+            document.querySelectorAll('.task-form-input, .task-form-textarea, .task-form-select').forEach(input => {
+                input.style.borderColor = 'rgba(107, 124, 109, 0.2)';
+            });
+        }
+
+        function saveTask() {
+            const form = document.getElementById('addTaskForm');
+            const saveBtn = document.getElementById('saveTaskBtn');
+            
+            if (!form || !saveBtn) {
+                console.error('Form or save button not found');
+                return;
+            }
+            
+            const btnText = saveBtn.querySelector('.task-btn-text');
+            const btnLoading = saveBtn.querySelector('.task-btn-loading');
+            
+            // Clear previous errors
+            clearTaskErrors();
+            
+            // Show loading state
+            if (btnText) btnText.style.display = 'none';
+            if (btnLoading) btnLoading.style.display = 'flex';
+            saveBtn.disabled = true;
+            
+            const formData = new FormData(form);
+            
+            fetch('/tasks', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeTaskModal();
+                    
+                    // Refresh the tasks list
+                    if (typeof refreshTasks === 'function') {
+                        refreshTasks();
+                    }
+                    
+                    // Show success message
+                    showTaskNotification('Task added successfully!', 'success');
+                } else {
+                    // Show validation errors
+                    if (data.errors) {
+                        Object.keys(data.errors).forEach(field => {
+                            showTaskFieldError(field, data.errors[field][0]);
+                        });
+                    } else {
+                        showTaskNotification(data.message || 'Failed to add task', 'error');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showTaskNotification('An error occurred while saving the task', 'error');
+            })
+            .finally(() => {
+                // Reset button state
+                if (btnText) btnText.style.display = 'flex';
+                if (btnLoading) btnLoading.style.display = 'none';
+                saveBtn.disabled = false;
+            });
+        }
+
+        function showTaskFieldError(field, message) {
+            const errorElement = document.getElementById(field + 'Error');
+            const inputElement = document.getElementById('task' + field.charAt(0).toUpperCase() + field.slice(1));
+            
+            if (errorElement) {
+                errorElement.textContent = message;
+            }
+            
+            if (inputElement) {
+                inputElement.style.borderColor = '#ff4444';
+            }
+        }
+
+        function showTaskNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `task-notification task-notification-${type}`;
+            notification.textContent = message;
+            
+            // Add styles if not already added
+            if (!document.querySelector('#taskNotificationStyles')) {
+                const styles = document.createElement('style');
+                styles.id = 'taskNotificationStyles';
+                styles.textContent = `
+                    .task-notification {
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        padding: 1rem 1.5rem;
+                        border-radius: 8px;
+                        color: white;
+                        font-weight: 500;
+                        z-index: 1001;
+                        animation: slideInRight 0.3s ease-out;
+                    }
+                    .task-notification-success { background: #4CAF50; }
+                    .task-notification-error { background: #ff4444; }
+                    .task-notification-info { background: #2196F3; }
+                    @keyframes slideInRight {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(styles);
+            }
+            
+            document.body.appendChild(notification);
+            
+            // Remove notification after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideInRight 0.3s ease-out reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function setQuickTask(category) {
+            const titleInput = document.getElementById('taskTitle');
+            const categorySelect = document.getElementById('taskCategory');
+            const prioritySelect = document.getElementById('taskPriority');
+            
+            if (categorySelect) categorySelect.value = category;
+            
+            const quickTasks = {
+                'followup': {
+                    title: 'Follow up on application status',
+                    priority: 'high'
+                },
+                'research': {
+                    title: 'Research company culture and values',
+                    priority: 'normal'
+                },
+                'interview': {
+                    title: 'Prepare for upcoming interview',
+                    priority: 'high'
+                },
+                'application': {
+                    title: 'Update application materials',
+                    priority: 'normal'
+                }
+            };
+            
+            if (quickTasks[category]) {
+                if (titleInput && !titleInput.value.trim()) {
+                    titleInput.value = quickTasks[category].title;
+                }
+                if (prioritySelect) prioritySelect.value = quickTasks[category].priority;
+            }
+            
+            if (titleInput) titleInput.focus();
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeTaskModal();
+            }
+        });
+
+        // Close modal on overlay click
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'addTaskModal') {
+                closeTaskModal();
+            }
         });
 
         function addNewApplication() {

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\JobApplicationController;
+use App\Http\Controllers\TaskController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -28,4 +29,9 @@ Route::middleware('auth')->group(function () {
     
     // Application Events routes
     Route::post('applications/{application}/events', [JobApplicationController::class, 'storeEvent'])->name('applications.events.store');
+    
+    // Task routes
+    Route::get('tasks/today', [TaskController::class, 'todayTasks'])->name('tasks.today');
+    Route::resource('tasks', TaskController::class)->except(['create', 'edit']);
+    Route::post('tasks/{task}/toggle', [TaskController::class, 'toggle'])->name('tasks.toggle');
 });
