@@ -1,121 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Zenith - All Applications</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #f5f1e8 0%, #e8f2e8 50%, #f0e5e0 100%);
-            min-height: 100vh;
-            letter-spacing: -0.01em;
-            color: #2d3e2e;
-            line-height: 1.5;
-        }
-
-        .navbar {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 0 0 24px 24px;
-            padding: 1.5rem 2rem;
-            box-shadow: 0 8px 40px rgba(45, 62, 46, 0.08);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            margin: 0 1rem;
-        }
-
-        .navbar::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-            border-radius: 0 0 24px 24px;
-            opacity: 0.6;
-        }
-
-        .brand {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #2d3e2e;
-            letter-spacing: -0.02em;
-            position: relative;
-            z-index: 2;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-            position: relative;
-            z-index: 2;
-        }
-
-        .nav-link {
-            color: #6b7c6d;
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.3s ease;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            color: #2d3e2e;
-        }
-
-        .user-menu {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            position: relative;
-            z-index: 2;
-        }
-
-        .user-name {
-            font-weight: 600;
-            color: #2d3e2e;
-            font-size: 0.95rem;
-        }
-
-        .logout-btn {
-            padding: 0.75rem 1.5rem;
-            background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-            text-decoration: none;
-        }
-
-        .logout-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 16px 48px rgba(255, 107, 107, 0.4);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
+<x-layout title="Zenith - All Applications">
+    <x-slot name="styles">
+        <style>
+            /* Application index specific styles */
+            .container {
+                max-width: 1200px;
+            }
 
         /* Header */
         .page-header {
@@ -277,39 +166,14 @@
 
         .application-card {
             background: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.4);
             border-radius: 20px;
-            padding: 2rem;
             display: flex;
             align-items: center;
             gap: 2rem;
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            cursor: pointer;
-            backdrop-filter: blur(20px);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .application-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .application-card:hover::before {
-            opacity: 1;
+            padding: 2em;
         }
 
         .application-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 24px 48px rgba(45, 62, 46, 0.15);
-            border-color: rgba(255, 255, 255, 0.6);
             background: rgba(255, 255, 255, 0.8);
         }
 
@@ -385,46 +249,7 @@
             z-index: 2;
         }
 
-        .status-tag {
-            padding: 0.75rem 1.5rem;
-            border-radius: 50px;
-            font-size: 0.9rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border: 2px solid transparent;
-            transition: all 0.2s ease;
-        }
-
-        .status-tag.applied {
-            background: rgba(240, 229, 224, 0.8);
-            color: #8b4513;
-            border-color: rgba(139, 69, 19, 0.2);
-        }
-
-        .status-tag.interviewing {
-            background: rgba(232, 242, 232, 0.8);
-            color: #2e7d32;
-            border-color: rgba(46, 125, 50, 0.2);
-        }
-
-        .status-tag.offer {
-            background: rgba(255, 107, 107, 0.1);
-            color: #ff6b6b;
-            border-color: rgba(255, 107, 107, 0.2);
-        }
-
-        .status-tag.rejected {
-            background: rgba(128, 128, 128, 0.1);
-            color: #666;
-            border-color: rgba(128, 128, 128, 0.2);
-        }
-
-        .status-tag.withdrawn {
-            background: rgba(128, 128, 128, 0.1);
-            color: #666;
-            border-color: rgba(128, 128, 128, 0.2);
-        }
+        /* Status tags are now handled by common CSS */
 
         .application-date {
             font-size: 0.85rem;
@@ -671,23 +496,8 @@
                 font-size: 0.8rem;
             }
         }
-    </style>
-</head>
-<body>
-    <nav class="navbar">
-        <div class="brand">Zenith</div>
-        <div class="nav-links">
-            <a href="{{ route('dashboard') }}" class="nav-link">Dashboard</a>
-            <a href="{{ route('applications.index') }}" class="nav-link active">Applications</a>
-        </div>
-        <div class="user-menu">
-            <span class="user-name">{{ auth()->user()->name }}</span>
-            <form action="{{ route('logout') }}" method="POST" style="display: inline;">
-                @csrf
-                <button type="submit" class="logout-btn">Logout</button>
-            </form>
-        </div>
-    </nav>
+        </style>
+    </x-slot>
 
     <div class="container">
         <!-- Page Header -->
@@ -755,42 +565,7 @@
         <!-- Applications List -->
         <main class="applications-list" id="applicationsList">
             @forelse($applications as $application)
-                <div class="application-card" onclick="showApplicationDetails({{ $application->id }})">
-                    <div class="company-logo">
-                        {{ strtoupper(substr($application->company_name, 0, 2)) }}
-                    </div>
-                    <div class="application-info">
-                        <h3 class="position-title">{{ $application->job_title }}</h3>
-                        <div class="company-name">{{ $application->company_name }}</div>
-                        <div class="application-meta">
-                            @if($application->location)
-                                <span class="meta-item">{{ $application->location }}</span>
-                                <div class="meta-separator"></div>
-                            @endif
-                            @if($application->employment_type)
-                                <span class="meta-item">{{ ucfirst($application->employment_type) }}</span>
-                                @if($application->salary_min || $application->salary_max)
-                                    <div class="meta-separator"></div>
-                                @endif
-                            @endif
-                            @if($application->salary_min || $application->salary_max)
-                                <span class="meta-item">
-                                    @if($application->salary_min && $application->salary_max)
-                                        {{ $application->salary_min }} - {{ $application->salary_max }}
-                                    @elseif($application->salary_min)
-                                        From {{ $application->salary_min }}
-                                    @else
-                                        Up to {{ $application->salary_max }}
-                                    @endif
-                                </span>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="status-section">
-                        <div class="status-tag {{ $application->status }}">{{ ucfirst($application->status) }}</div>
-                        <div class="application-date">{{ $application->created_at->format('M j, Y') }}</div>
-                    </div>
-                </div>
+                <x-application-card :application="$application" />
             @empty
                 <div class="empty-state">
                     <h3>No applications found</h3>
@@ -916,5 +691,12 @@
             }
         });
     </script>
-</body>
-</html>
+
+    <x-slot name="scripts">
+        <script>
+            function showApplicationDetails(applicationId) {
+                window.location.href = `/applications/${applicationId}`;
+            }
+        </script>
+    </x-slot>
+</x-layout>

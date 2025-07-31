@@ -1,167 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Zenith - Job Application Tracker</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #f5f1e8 0%, #e8f2e8 50%, #f0e5e0 100%);
-            min-height: 100vh;
-            overflow-x: hidden;
-            letter-spacing: -0.01em;
-            margin: 0;
-            padding: 0;
-        }
-
-        .navbar {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 0 0 24px 24px;
-            padding: 1.5rem 2rem;
-            box-shadow: 0 8px 40px rgba(45, 62, 46, 0.08);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            margin: 0 1rem;
-        }
-
-        .navbar::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-            border-radius: 0 0 24px 24px;
-            opacity: 0.6;
-        }
-
-        .brand {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #2d3e2e;
-            letter-spacing: -0.02em;
-            position: relative;
-            z-index: 2;
-        }
-
-        .user-menu {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            position: relative;
-            z-index: 2;
-        }
-
-        .user-name {
-            font-weight: 600;
-            color: #2d3e2e;
-            font-size: 0.95rem;
-        }
-
-        .logout-btn {
-            padding: 0.75rem 1.5rem;
-            background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-            box-shadow: 0 8px 32px rgba(255, 107, 107, 0.3);
-            letter-spacing: -0.01em;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .logout-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 16px 48px rgba(255, 107, 107, 0.4);
-            background: linear-gradient(135deg, #ff5252 0%, #ff4444 100%);
-        }
-
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 2rem;
-            position: relative;
-        }
-
-        .header {
-            margin-bottom: 3rem;
-            text-align: center;
-        }
-
-        .logo {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #2d3e2e;
-            letter-spacing: -0.02em;
-            margin-bottom: 0.5rem;
-        }
-
-        .subtitle {
-            font-size: 1.1rem;
-            color: #6b7c6d;
-            font-weight: 500;
-        }
-
+<x-layout title="Zenith - Job Application Tracker">
+    <x-slot name="styles">
+        <style>
+            /* Dashboard specific styles */
         .bento-grid {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
             grid-template-rows: repeat(8, 120px);
             gap: 1.5rem;
             margin-bottom: 2rem;
-        }
-
-        .card {
-            backdrop-filter: blur(20px);
-            background: rgba(255, 255, 255, 0.25);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 24px;
-            padding: 2rem;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            cursor: pointer;
-        }
-
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .card:hover::before {
-            opacity: 1;
-        }
-
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 32px 64px rgba(45, 62, 46, 0.15);
-            border-color: rgba(255, 255, 255, 0.5);
         }
 
         .progress-ring {
@@ -413,75 +259,7 @@
             flex: 1;
         }
 
-        .cta-button {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
-            color: white;
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 50px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-            box-shadow: 0 8px 32px rgba(255, 107, 107, 0.3);
-            letter-spacing: -0.01em;
-            position: relative;
-            z-index: 10;
-        }
-
-        .cta-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 16px 48px rgba(255, 107, 107, 0.4);
-            background: linear-gradient(135deg, #ff5252 0%, #ff4444 100%);
-        }
-
-        .floating-elements {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .floating-circle {
-            position: absolute;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-            animation: float 20s ease-in-out infinite;
-        }
-
-        .floating-circle:nth-child(1) {
-            width: 300px;
-            height: 300px;
-            top: 10%;
-            left: 80%;
-            animation-delay: 0s;
-        }
-
-        .floating-circle:nth-child(2) {
-            width: 200px;
-            height: 200px;
-            top: 60%;
-            left: 5%;
-            animation-delay: -10s;
-        }
-
-        .floating-circle:nth-child(3) {
-            width: 150px;
-            height: 150px;
-            top: 30%;
-            left: 20%;
-            animation-delay: -5s;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            25% { transform: translateY(-20px) rotate(90deg); }
-            50% { transform: translateY(-40px) rotate(180deg); }
-            75% { transform: translateY(-20px) rotate(270deg); }
-        }
+        /* CTA button styling now handled by common CSS */
 
         .task-panel {
             grid-column: 1 / 5;
@@ -812,58 +590,38 @@
                 gap: 0.8rem;
             }
         }
-    </style>
-</head>
-<body>
-    <div class="floating-elements">
-        <div class="floating-circle"></div>
-        <div class="floating-circle"></div>
-        <div class="floating-circle"></div>
-    </div>
-
-    <nav class="navbar">
-        <div class="brand">Zenith</div>
-        <div class="user-menu">
-            <span class="user-name">Welcome, {{ auth()->user()->name }}!</span>
-            <form action="{{ route('logout') }}" method="POST" style="display: inline;">
-                @csrf
-                <button type="submit" class="logout-btn">Logout</button>
-            </form>
-        </div>
-    </nav>
+        </style>
+    </x-slot>
 
     <div class="container">
-        <header class="header">
-            <h1 class="logo">Zenith</h1>
-            <p class="subtitle">Your mindful career progression companion</p>
-        </header>
+        <x-page-header 
+            title="Zenith" 
+            subtitle="Your mindful career progression companion" 
+        />
 
         <div class="bento-grid">
             <!-- Applied Stage -->
-            <div class="card stage-card applied" onclick="window.location.href='{{ route('applications.index', ['filter' => 'applied']) }}'">
-                <div class="stage-header">
-                    <h2 class="stage-title">Applied</h2>
-                    <span class="stage-count" id="appliedCount">{{ $stats['applied'] ?? 0 }}</span>
-                </div>
-                <div class="stage-content">
-                    <div class="stage-metric" id="appliedMetric">{{ $stats['applied'] ?? 0 }}</div>
-                    <div class="stage-label">Applications Sent</div>
-                    <p class="stage-description">Your applications are working their way through the pipeline</p>
-                </div>
-            </div>
+            <x-stat-card
+                title="Applied"
+                :value="$stats['applied'] ?? 0"
+                label="Applications Sent"
+                :href="route('applications.index', ['filter' => 'applied'])"
+                class="applied"
+                id="appliedCount"
+            >
+                <p class="stage-description">Your applications are working their way through the pipeline</p>
+            </x-stat-card>
 
             <!-- Interviewing Stage -->
-            <div class="card stage-card interviewing" onclick="window.location.href='{{ route('applications.index', ['filter' => 'interviewing']) }}'">
-                <div class="stage-header">
-                    <h2 class="stage-title">Interviewing</h2>
-                    <span class="stage-count">{{ $stats['interviewing'] ?? 0 }}</span>
-                </div>
-                <div class="stage-content">
-                    <div class="stage-metric">{{ $stats['interviewing'] ?? 0 }}</div>
-                    <div class="stage-label">In Progress</div>
-                    <p class="stage-description">Conversations are happening—you're making progress</p>
-                </div>
-            </div>
+            <x-stat-card
+                title="Interviewing"
+                :value="$stats['interviewing'] ?? 0"
+                label="In Progress"
+                :href="route('applications.index', ['filter' => 'interviewing'])"
+                class="interviewing"
+            >
+                <p class="stage-description">Conversations are happening—you're making progress</p>
+            </x-stat-card>
 
             <!-- Progress Ring -->
             <div class="card progress-ring" onclick="window.location.href='{{ route('analytics') }}'" style="cursor: pointer;">
@@ -919,17 +677,15 @@
             </div>
 
             <!-- Offer Stage -->
-            <div class="card stage-card offer" onclick="window.location.href='{{ route('applications.index', ['filter' => 'offer']) }}'">
-                <div class="stage-header">
-                    <h2 class="stage-title">Offers</h2>
-                    <span class="stage-count">{{ $stats['offers'] ?? 0 }}</span>
-                </div>
-                <div class="stage-content">
-                    <div class="stage-metric">{{ $stats['offers'] ?? 0 }}</div>
-                    <div class="stage-label">Pending Decision</div>
-                    <p class="stage-description">Congratulations! You have choices to make</p>
-                </div>
-            </div>
+            <x-stat-card
+                title="Offers"
+                :value="$stats['offers'] ?? 0"
+                label="Pending Decision"
+                :href="route('applications.index', ['filter' => 'offer'])"
+                class="offer"
+            >
+                <p class="stage-description">Congratulations! You have choices to make</p>
+            </x-stat-card>
 
             <!-- Recent Activity -->
             <div class="card recent-activity">
@@ -1089,8 +845,8 @@
     </script>
 
     <!-- Application Modal -->
-    <div id="applicationModal" class="application-modal-overlay" style="display: none;">
-        <div class="application-modal">
+    <div id="applicationModal" class="modal-overlay" style="display: none;">
+        <div class="modal">
             <!-- Progress Bar -->
             <div class="progress-container">
                 <div class="progress-bar" id="progressBar"></div>
@@ -1246,456 +1002,6 @@
         </div>
     </div>
 
-    <style>
-        /* Application Modal Styles */
-        .application-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(45, 62, 46, 0.1);
-            backdrop-filter: blur(12px);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            animation: fadeIn 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                backdrop-filter: blur(0px);
-            }
-            to {
-                opacity: 1;
-                backdrop-filter: blur(12px);
-            }
-        }
-
-        .application-modal {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(40px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 32px;
-            width: 100%;
-            max-width: 600px;
-            max-height: 90vh;
-            min-height: 500px;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 
-                0 32px 64px rgba(45, 62, 46, 0.15),
-                0 0 0 1px rgba(255, 255, 255, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.4);
-            animation: modalSlideIn 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
-        @keyframes modalSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(40px) scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        .progress-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.3);
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #ff6b6b 0%, #ff5252 100%);
-            width: 33.33%;
-            transition: width 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-            box-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
-        }
-
-        .modal-header {
-            padding: 3rem 3rem 1rem 3rem;
-            text-align: center;
-            position: relative;
-            flex-shrink: 0;
-        }
-
-        .close-button {
-            position: absolute;
-            top: 2rem;
-            right: 2rem;
-            width: 44px;
-            height: 44px;
-            border: none;
-            background: rgba(255, 255, 255, 0.6);
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-            color: #6b7c6d;
-            font-size: 1.2rem;
-            backdrop-filter: blur(10px);
-        }
-
-        .close-button:hover {
-            background: rgba(255, 255, 255, 0.8);
-            transform: scale(1.05);
-            color: #2d3e2e;
-        }
-
-        .modal-title {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #2d3e2e;
-            letter-spacing: -0.03em;
-            margin-bottom: 0.5rem;
-        }
-
-        .modal-subtitle {
-            font-size: 1.1rem;
-            color: #6b7c6d;
-            font-weight: 500;
-            margin-bottom: 1rem;
-        }
-
-        .step-indicator {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .step-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(107, 124, 109, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .step-dot.active {
-            background: #ff6b6b;
-            transform: scale(1.5);
-            box-shadow: 0 0 12px rgba(255, 107, 107, 0.4);
-        }
-
-        .step-dot.completed {
-            background: #6b7c6d;
-        }
-
-        .modal-body {
-            padding: 2rem 3rem;
-            min-height: 300px;
-            flex: 1;
-            overflow-y: auto;
-            max-height: calc(90vh - 300px);
-        }
-
-        .step {
-            display: none;
-            animation: stepFadeIn 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
-        .step.active {
-            display: block;
-        }
-
-        @keyframes stepFadeIn {
-            from {
-                opacity: 0;
-                transform: translateX(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .step-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #2d3e2e;
-            letter-spacing: -0.02em;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-
-        .form-group {
-            margin-bottom: 2rem;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .form-label {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #2d3e2e;
-            margin-bottom: 0.75rem;
-            display: block;
-            letter-spacing: -0.01em;
-        }
-
-        .form-input, .form-textarea, .form-select {
-            width: 100%;
-            padding: 1.25rem 1.5rem;
-            border: 2px solid rgba(255, 255, 255, 0.6);
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            font-size: 1rem;
-            font-weight: 500;
-            color: #2d3e2e;
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-            font-family: 'Inter', sans-serif;
-        }
-
-        .form-input:focus, .form-textarea:focus, .form-select:focus {
-            outline: none;
-            border-color: #ff6b6b;
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .form-input::placeholder, .form-textarea::placeholder {
-            color: #6b7c6d;
-            font-weight: 400;
-        }
-
-        .form-textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-
-        .salary-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .file-upload {
-            position: relative;
-            display: block;
-            width: 100%;
-            padding: 2rem;
-            border: 2px dashed rgba(107, 124, 109, 0.3);
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.4);
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
-        .file-upload:hover {
-            border-color: #ff6b6b;
-            background: rgba(255, 255, 255, 0.6);
-            transform: translateY(-2px);
-        }
-
-        .file-upload input {
-            position: absolute;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-
-        .file-upload-icon {
-            font-size: 2rem;
-            color: #6b7c6d;
-            margin-bottom: 0.5rem;
-        }
-
-        .file-upload-text {
-            font-size: 1rem;
-            color: #6b7c6d;
-            font-weight: 500;
-        }
-
-        .file-upload.has-file {
-            border-color: #ff6b6b;
-            background: rgba(255, 107, 107, 0.1);
-        }
-
-        .file-upload.has-file .file-upload-text {
-            color: #ff6b6b;
-            font-weight: 600;
-        }
-
-        .modal-footer {
-            padding: 2rem 3rem 3rem 3rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-        }
-
-        .btn {
-            padding: 1rem 2rem;
-            border-radius: 50px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-            border: none;
-            font-family: 'Inter', sans-serif;
-            letter-spacing: -0.01em;
-            min-width: 120px;
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.6);
-            color: #6b7c6d;
-            backdrop-filter: blur(10px);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.8);
-            color: #2d3e2e;
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
-            color: white;
-            box-shadow: 0 8px 32px rgba(255, 107, 107, 0.3);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 16px 48px rgba(255, 107, 107, 0.4);
-            background: linear-gradient(135deg, #ff5252 0%, #ff4444 100%);
-        }
-
-        .success-step {
-            text-align: center;
-            padding: 3rem 0;
-        }
-
-        .success-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 2rem;
-            color: white;
-            font-size: 2rem;
-            animation: successPulse 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
-        @keyframes successPulse {
-            0% {
-                transform: scale(0);
-                opacity: 0;
-            }
-            50% {
-                transform: scale(1.1);
-            }
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        .success-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #2d3e2e;
-            margin-bottom: 1rem;
-        }
-
-        .success-description {
-            font-size: 1.1rem;
-            color: #6b7c6d;
-            margin-bottom: 2rem;
-        }
-
-        @media (max-width: 768px) {
-            .application-modal {
-                margin: 1rem;
-                max-width: none;
-                border-radius: 24px;
-            }
-
-            .modal-header,
-            .modal-body,
-            .modal-footer {
-                padding-left: 2rem;
-                padding-right: 2rem;
-            }
-
-            .modal-title {
-                font-size: 2rem;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-
-            .salary-group {
-                grid-template-columns: 1fr;
-            }
-
-            .modal-footer {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .btn {
-                width: 100%;
-            }
-        }
-
-        /* Custom Scrollbar */
-        .modal-body::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .modal-body::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-        }
-
-        .modal-body::-webkit-scrollbar-thumb {
-            background: rgba(255, 107, 107, 0.4);
-            border-radius: 3px;
-        }
-
-        .modal-body::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 107, 107, 0.6);
-        }
     </style>
 
     <script>
@@ -1926,5 +1232,42 @@
             }
         });
     </script>
-</body>
-</html>
+
+    <x-slot name="scripts">
+        <script>
+            // Dashboard specific JavaScript can go here
+            function addNewApplication() {
+                const appliedCard = document.getElementById('appliedCount');
+                const appliedMetric = appliedCard.querySelector('.stage-metric');
+                const currentCount = parseInt(appliedCard.querySelector('.stage-count').textContent);
+                
+                appliedCard.querySelector('.stage-count').style.transform = 'scale(1.2)';
+                appliedCard.querySelector('.stage-count').style.background = '#ff6b6b';
+                appliedCard.querySelector('.stage-count').style.color = 'white';
+                
+                setTimeout(() => {
+                    appliedCard.querySelector('.stage-count').textContent = currentCount + 1;
+                    appliedCard.querySelector('.stage-count').style.transform = 'scale(1)';
+                    appliedCard.querySelector('.stage-count').style.background = 'rgba(255, 255, 255, 0.8)';
+                    appliedCard.querySelector('.stage-count').style.color = '#2d3e2e';
+                    
+                    if (appliedMetric) appliedMetric.textContent = currentCount + 1;
+                }, 300);
+            }
+
+            function openApplicationModal() {
+                console.log('Opening application modal...');
+                const modal = document.getElementById('applicationModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    currentStep = 1;
+                    updateProgressBar();
+                    updateStepIndicators();
+                    updateButtons();
+                } else {
+                    console.error('Modal not found!');
+                }
+            }
+        </script>
+    </x-slot>
+</x-layout>

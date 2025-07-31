@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ApplicationEvent;
 use App\Models\JobApplication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -104,6 +105,11 @@ class JobApplicationController extends Controller
         if ($application->user_id !== Auth::id()) {
             abort(403, 'Unauthorized access to this application.');
         }
+        
+        // Load events ordered by date
+        $application->load(['events' => function ($query) {
+            $query->orderBy('created_at', 'asc');
+        }]);
         
         // If this is an API request, return JSON
         if ($request->expectsJson()) {
@@ -223,5 +229,136 @@ class JobApplicationController extends Controller
             'success' => true,
             'message' => 'Application deleted successfully!'
         ]);
+    }
+
+    public function storeEvent(Request $request, JobApplication $application)
+    {
+        // Check if the application belongs to the authenticated user
+        if ($application->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to this application.');
+        }
+
+        // Debug logging
+        \Log::info('Event creation request received', [
+            'type' => $request->type,
+            'application_id' => $application->id,
+            'request_data' => $request->all()
+        ]);
+
+        $request->validate([
+            'type' => 'required|in:interview,note,followup,rejected',
+            'title' => 'nullable|string|max:255',
+            'date' => 'nullable|date',
+            'time' => 'nullable|string',
+            'interview_type' => 'nullable|string|max:100',
+            'content' => 'nullable|string',
+            'notes' => 'nullable|string',
+            'action' => 'nullable|string|max:255',
+            'due_date' => 'nullable|date',
+            'priority' => 'nullable|in:high,medium,low',
+            'details' => 'nullable|string',
+            'reminder' => 'nullable|boolean',
+            // Rejected event specific fields
+            'reason' => 'nullable|string|max:255',
+            'rejection_date' => 'nullable|date',
+            'feedback' => 'nullable|string',
+            'reapply_future' => 'nullable|boolean',
+        ]);
+
+        // Prepare event data based on type
+        $eventData = [
+            'job_application_id' => $application->id,
+            'type' => $request->type,
+            'title' => $request->filled('title') ? $request->title : $this->getDefaultTitle($request->type),
+        ];
+
+        // Add type-specific data
+        switch ($request->type) {
+            case 'interview':
+                $eventData = array_merge($eventData, [
+                    'description' => $request->interview_type ? ucfirst($request->interview_type) . ' interview scheduled' : 'Interview scheduled',
+                    'event_date' => $request->date,
+                    'event_time' => $request->time,
+                    'interview_type' => $request->interview_type,
+                    'notes' => $request->notes,
+                    'reminder' => $request->boolean('reminder'),
+                ]);
+                break;
+
+            case 'note':
+                $eventData = array_merge($eventData, [
+                    'description' => \Str::limit($request->content, 100),
+                    'content' => $request->content,
+                    'event_date' => now()->toDateString(),
+                ]);
+                break;
+
+            case 'followup':
+                $eventData = array_merge($eventData, [
+                    'description' => ucfirst($request->priority ?? 'medium') . ' priority follow-up task',
+                    'action' => $request->action,
+                    'due_date' => $request->due_date,
+                    'priority' => $request->priority,
+                    'details' => $request->details,
+                    'reminder' => $request->boolean('reminder'),
+                ]);
+                break;
+
+            case 'rejected':
+                $eventData = array_merge($eventData, [
+                    'title' => 'Application Rejected',
+                    'description' => $request->reason ? str_replace('_', ' ', ucfirst($request->reason)) : 'Application was rejected',
+                    'event_date' => $request->rejection_date ?? now()->toDateString(),
+                    'reason' => $request->reason,
+                    'feedback' => $request->feedback,
+                    'notes' => $request->notes,
+                    'reapply_future' => $request->boolean('reapply_future'),
+                ]);
+                
+                // Update application status to rejected
+                $application->update(['status' => 'rejected']);
+                break;
+        }
+
+        // Create the event
+        try {
+            $event = ApplicationEvent::create($eventData);
+            
+            \Log::info('Event created successfully', [
+                'event_id' => $event->id,
+                'event_data' => $eventData
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to create event', [
+                'error' => $e->getMessage(),
+                'event_data' => $eventData
+            ]);
+            throw $e;
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Event added to timeline successfully!',
+            'data' => [
+                'id' => $event->id,
+                'type' => $event->type,
+                'title' => $event->title,
+                'description' => $event->description,
+                'application_id' => $application->id,
+                'application_status' => $application->fresh()->status,
+                'created_at' => $event->created_at,
+            ]
+        ]);
+    }
+
+    private function getDefaultTitle(string $type): string
+    {
+        return match ($type) {
+            'interview' => 'Interview Scheduled',
+            'note' => 'Note Added',
+            'followup' => 'Follow-up Action',
+            'rejected' => 'Application Rejected',
+            default => 'Timeline Event',
+        };
     }
 }

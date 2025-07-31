@@ -25,4 +25,7 @@ Route::middleware('auth')->group(function () {
     
     // Job Application routes
     Route::resource('applications', JobApplicationController::class)->except(['create']);
+    
+    // Application Events routes
+    Route::post('applications/{application}/events', [JobApplicationController::class, 'storeEvent'])->name('applications.events.store');
 });

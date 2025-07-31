@@ -1,31 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Zenith - {{ $application->job_title }} at {{ $application->company_name }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #f5f1e8 0%, #e8f2e8 50%, #f0e5e0 100%);
-            min-height: 100vh;
-            letter-spacing: -0.01em;
-            color: #2d3e2e;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
+<x-layout title="Zenith - {{ $application->job_title }} at {{ $application->company_name }}">
+    <x-slot name="styles">
+        <style>
+            /* Application detail specific styles */
+            .container {
+                max-width: 1400px;
+                margin: 0 auto;
+                padding: 2rem;
+            }
 
         /* Header */
         .header {
@@ -561,9 +542,417 @@
             50% { transform: translateY(-60px) rotate(180deg); }
             75% { transform: translateY(-30px) rotate(270deg); }
         }
-    </style>
-</head>
-<body>
+
+        /* Add Event Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(45, 62, 46, 0.1);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            animation: overlayFadeIn 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        @keyframes overlayFadeIn {
+            from {
+                opacity: 0;
+                backdrop-filter: blur(0px);
+            }
+            to {
+                opacity: 1;
+                backdrop-filter: blur(12px);
+            }
+        }
+
+        @keyframes overlayFadeOut {
+            from {
+                opacity: 1;
+                backdrop-filter: blur(12px);
+            }
+            to {
+                opacity: 0;
+                backdrop-filter: blur(0px);
+            }
+        }
+
+        .add-event-modal {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 32px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 
+                0 32px 80px rgba(45, 62, 46, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            animation: modalSlideIn 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .add-event-modal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.1) 0%, 
+                rgba(255, 107, 107, 0.02) 50%, 
+                rgba(255, 255, 255, 0.05) 100%);
+            border-radius: 32px;
+            pointer-events: none;
+        }
+
+        .add-event-modal .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .add-event-modal .modal-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2d3e2e;
+            letter-spacing: -0.02em;
+        }
+
+        .add-event-modal .close-button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            color: #6b7c6d;
+            font-size: 1.1rem;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .add-event-modal .close-button:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: scale(1.05);
+            color: #2d3e2e;
+        }
+
+        .event-type-selector {
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .selector-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3e2e;
+            margin-bottom: 1rem;
+            letter-spacing: -0.01em;
+        }
+
+        .type-buttons {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .type-button {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.7);
+            color: #6b7c6d;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            font-family: 'Inter', sans-serif;
+            backdrop-filter: blur(10px);
+            flex: 1;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .type-button:hover {
+            border-color: rgba(255, 107, 107, 0.4);
+            background: rgba(255, 255, 255, 0.8);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(45, 62, 46, 0.1);
+        }
+
+        .type-button.active {
+            border-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            color: #ff6b6b;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 107, 107, 0.2);
+        }
+
+        .form-container {
+            position: relative;
+            z-index: 2;
+            min-height: 300px;
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            margin-right: -10px;
+        }
+
+        .form-content {
+            display: none;
+            animation: formSlideIn 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .form-content.active {
+            display: block;
+        }
+
+        @keyframes formSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3e2e;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.01em;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            font-size: 1rem;
+            font-weight: 500;
+            color: #2d3e2e;
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: #9aa0a6;
+            font-weight: 400;
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-textarea.large {
+            min-height: 200px;
+        }
+
+        .datetime-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .datetime-group {
+            flex: 1;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .checkbox:checked {
+            background: #ff6b6b;
+            border-color: #ff6b6b;
+        }
+
+        .checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .checkbox-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #6b7c6d;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            position: relative;
+            z-index: 2;
+            flex-shrink: 0;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.7);
+            color: #6b7c6d;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.9);
+            color: #2d3e2e;
+            transform: translateY(-2px);
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .quick-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #6b7c6d;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .quick-btn:hover {
+            background: rgba(255, 255, 255, 0.8);
+            color: #2d3e2e;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Custom Scrollbar for Form Container */
+        .form-container::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .form-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        .form-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 107, 107, 0.3);
+            border-radius: 2px;
+        }
+
+        .form-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 107, 107, 0.5);
+        }
+
+        /* Mobile Responsive for Add Event Modal */
+        @media (max-width: 768px) {
+            .add-event-modal {
+                max-height: 95vh;
+                margin: 1rem;
+                padding: 2rem;
+                border-radius: 24px;
+            }
+
+            .form-container {
+                padding-right: 5px;
+                margin-right: -5px;
+            }
+
+            .modal-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+        </style>
+    </x-slot>
     <div class="floating-elements">
         <div class="floating-circle"></div>
         <div class="floating-circle"></div>
@@ -658,56 +1047,94 @@
                         @endif
                     </div>
 
-                    @if($application->status === 'interviewing')
-                    <div class="timeline-event active">
+                    @foreach($application->events as $event)
+                    @php
+                        $eventClass = 'completed'; // Default
+                        if ($event->type === 'rejected') {
+                            $eventClass = 'completed';
+                        } elseif ($event->type === 'interview') {
+                            if ($event->event_date && \Carbon\Carbon::parse($event->event_date)->isFuture()) {
+                                $eventClass = 'upcoming';
+                            } elseif ($event->event_date && \Carbon\Carbon::parse($event->event_date)->isToday()) {
+                                $eventClass = 'active';
+                            } else {
+                                $eventClass = 'completed';
+                            }
+                        } elseif ($event->type === 'followup') {
+                            if ($event->due_date && \Carbon\Carbon::parse($event->due_date)->isFuture()) {
+                                $eventClass = 'upcoming';
+                            } else {
+                                $eventClass = 'completed';
+                            }
+                        }
+                    @endphp
+                    <div class="timeline-event {{ $eventClass }}" onclick="expandEvent(this)">
                         <div class="event-header">
-                            <h4 class="event-title">Interview Process</h4>
-                            <span class="event-date">In Progress</span>
+                            <h4 class="event-title">{{ $event->title }}</h4>
+                            <span class="event-date">
+                                @if($event->event_date)
+                                    {{ \Carbon\Carbon::parse($event->event_date)->format('M j') }}
+                                @else
+                                    {{ $event->created_at->format('M j') }}
+                                @endif
+                            </span>
                         </div>
                         <p class="event-description">
-                            Currently in the interview process with {{ $application->company_name }}
+                            {{ $event->description ?? 'No description available' }}
                         </p>
                         <div class="event-details">
-                            <span class="event-tag">Active</span>
-                            <span class="event-tag">Interviewing</span>
+                            @php
+                                $tags = [];
+                                switch($event->type) {
+                                    case 'interview':
+                                        $tags[] = ucfirst($event->interview_type ?? 'Interview');
+                                        if ($event->reminder) $tags[] = 'Reminder Set';
+                                        break;
+                                    case 'note':
+                                        $tags[] = 'Note';
+                                        $tags[] = 'Personal';
+                                        break;
+                                    case 'followup':
+                                        $tags[] = 'Follow-up';
+                                        if ($event->priority) $tags[] = ucfirst($event->priority);
+                                        break;
+                                    case 'rejected':
+                                        $tags[] = 'Rejected';
+                                        if ($event->reapply_future) $tags[] = 'Reapply Future';
+                                        break;
+                                }
+                            @endphp
+                            @foreach($tags as $tag)
+                                <span class="event-tag">{{ $tag }}</span>
+                            @endforeach
+                            @if($event->event_time)
+                                <span class="event-tag">{{ $event->event_time }}</span>
+                            @endif
                         </div>
+                        @if($event->notes || $event->feedback || $event->content)
+                        <div class="event-notes">
+                            {{ $event->notes ?? $event->feedback ?? $event->content }}
+                        </div>
+                        @endif
                     </div>
-                    @endif
+                    @endforeach
 
-                    @if($application->status === 'offer')
-                    <div class="timeline-event completed">
-                        <div class="event-header">
-                            <h4 class="event-title">Offer Received</h4>
-                            <span class="event-date">Recent</span>
-                        </div>
-                        <p class="event-description">
-                            Congratulations! You've received an offer from {{ $application->company_name }}
-                        </p>
-                        <div class="event-details">
-                            <span class="event-tag">Offer</span>
-                            <span class="event-tag">Success</span>
-                        </div>
-                    </div>
-                    @endif
-
-                    @if(in_array($application->status, ['applied', 'interviewing']))
+                    @if($application->events->count() === 0)
+                    <!-- Show placeholder if no events exist -->
                     <div class="timeline-event upcoming">
                         <div class="event-header">
-                            <h4 class="event-title">Next Steps</h4>
-                            <span class="event-date">Pending</span>
+                            <h4 class="event-title">Ready to Track Progress</h4>
+                            <span class="event-date">Start</span>
                         </div>
                         <p class="event-description">
-                            @if($application->status === 'applied')
-                                Waiting for response from {{ $application->company_name }}
-                            @else
-                                Continue with interview process
-                            @endif
+                            Use the "Add Event" button to track interviews, notes, follow-ups, and application updates.
                         </p>
                         <div class="event-details">
-                            <span class="event-tag">Pending</span>
+                            <span class="event-tag">Getting Started</span>
                         </div>
                     </div>
                     @endif
+
                 </div>
             </div>
 
@@ -806,13 +1233,198 @@
 
                 <!-- Actions -->
                 <div class="action-buttons">
-                    <a href="{{ route('applications.edit', $application) }}" class="btn btn-secondary">
+                    <button class="btn btn-secondary" onclick="showEditApplicationModal()">
                         Edit Application
-                    </a>
-                    <button class="btn btn-primary" onclick="updateStatus()">
-                        Update Status
+                    </button>
+                    <button class="btn btn-primary" onclick="addEvent()">
+                        Add Event
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Application Modal -->
+    <x-edit-application-modal :application="$application" />
+
+    <!-- Add Event Modal -->
+    <div class="modal-overlay" id="addEventModalOverlay" style="display: none;">
+        <div class="add-event-modal">
+            <!-- Header -->
+            <div class="modal-header">
+                <h2 class="modal-title">Add to Timeline</h2>
+                <button class="close-button" onclick="closeAddEventModal()" aria-label="Close modal">×</button>
+            </div>
+
+            <!-- Event Type Selector -->
+            <div class="event-type-selector">
+                <label class="selector-label">Event Type</label>
+                <div class="type-buttons">
+                    <button class="type-button active" data-type="interview" onclick="selectEventType('interview')">
+                        Interview
+                    </button>
+                    <button class="type-button" data-type="note" onclick="selectEventType('note')">
+                        Note
+                    </button>
+                    <button class="type-button" data-type="followup" onclick="selectEventType('followup')">
+                        Follow-up
+                    </button>
+                    <button class="type-button" data-type="rejected" onclick="selectEventType('rejected')">
+                        Rejected
+                    </button>
+                </div>
+            </div>
+
+            <!-- Form Container -->
+            <div class="form-container">
+                <!-- Interview Form -->
+                <form class="form-content active" id="interviewForm">
+                    <div class="form-group">
+                        <label class="form-label">Interview Title</label>
+                        <input type="text" class="form-input" name="title" placeholder="e.g., Technical Interview with Engineering Team" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="datetime-group">
+                            <label class="form-label">Date</label>
+                            <input type="date" class="form-input" name="date" required>
+                        </div>
+                        <div class="datetime-group">
+                            <label class="form-label">Time</label>
+                            <input type="time" class="form-input" name="time" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Interview Type</label>
+                        <select class="form-select" name="interview_type" required>
+                            <option value="">Select interview type</option>
+                            <option value="phone">Phone Screen</option>
+                            <option value="video">Video Interview</option>
+                            <option value="onsite">On-site Interview</option>
+                            <option value="technical">Technical Interview</option>
+                            <option value="final">Final Round</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Notes (Optional)</label>
+                        <textarea class="form-textarea" name="notes" placeholder="Add any preparation notes or details about the interview..."></textarea>
+                        
+                        <div class="checkbox-group">
+                            <input type="checkbox" class="checkbox" name="reminder" id="interviewReminder">
+                            <label for="interviewReminder" class="checkbox-label">Set reminder 1 hour before</label>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Note Form -->
+                <form class="form-content" id="noteForm">
+                    <div class="form-group">
+                        <label class="form-label">Note Title</label>
+                        <input type="text" class="form-input" name="title" placeholder="e.g., Research on company culture" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Note Content</label>
+                        <textarea class="form-textarea large" name="content" placeholder="Write your note here... This could be research findings, interview feedback, company insights, or any other relevant information." required></textarea>
+                    </div>
+                    
+                    <div class="quick-actions">
+                        <button type="button" class="quick-btn" onclick="insertQuickText('📞 Called HR department')">📞 Call</button>
+                        <button type="button" class="quick-btn" onclick="insertQuickText('✉️ Sent follow-up email')">✉️ Email</button>
+                        <button type="button" class="quick-btn" onclick="insertQuickText('🔍 Researched company')">🔍 Research</button>
+                    </div>
+                </form>
+
+                <!-- Follow-up Form -->
+                <form class="form-content" id="followupForm">
+                    <div class="form-group">
+                        <label class="form-label">Follow-up Action</label>
+                        <select class="form-select" name="action" required>
+                            <option value="">Select follow-up type</option>
+                            <option value="email">Send Thank You Email</option>
+                            <option value="status">Check Application Status</option>
+                            <option value="portfolio">Submit Additional Portfolio</option>
+                            <option value="references">Provide References</option>
+                            <option value="salary">Discuss Salary Expectations</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="datetime-group">
+                            <label class="form-label">Due Date</label>
+                            <input type="date" class="form-input" name="due_date" required>
+                        </div>
+                        <div class="datetime-group">
+                            <label class="form-label">Priority</label>
+                            <select class="form-select" name="priority" required>
+                                <option value="">Select priority</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Details</label>
+                        <textarea class="form-textarea" name="details" placeholder="Describe what needs to be done and any specific requirements..." required></textarea>
+                        
+                        <div class="checkbox-group">
+                            <input type="checkbox" class="checkbox" name="reminder" id="followupReminder">
+                            <label for="followupReminder" class="checkbox-label">Set reminder for due date</label>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Rejected Form -->
+                <form class="form-content" id="rejectedForm">
+                    <div class="form-group">
+                        <label class="form-label">Rejection Reason</label>
+                        <select class="form-select" name="reason" required>
+                            <option value="">Select reason</option>
+                            <option value="position_filled">Position was filled</option>
+                            <option value="qualifications">Not qualified for the role</option>
+                            <option value="experience">Insufficient experience</option>
+                            <option value="cultural_fit">Not a cultural fit</option>
+                            <option value="salary_expectations">Salary expectations mismatch</option>
+                            <option value="location">Location requirements</option>
+                            <option value="other">Other reason</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Date Rejected</label>
+                        <input type="date" class="form-input" name="rejection_date" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Feedback Received (Optional)</label>
+                        <textarea class="form-textarea" name="feedback" placeholder="Any feedback or details provided by the company about the rejection..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Notes & Lessons Learned (Optional)</label>
+                        <textarea class="form-textarea" name="notes" placeholder="What did you learn from this experience? Any areas for improvement..."></textarea>
+                        
+                        <div class="checkbox-group">
+                            <input type="checkbox" class="checkbox" name="reapply_future" id="reapplyFuture">
+                            <label for="reapplyFuture" class="checkbox-label">Open to reapplying in the future</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Actions -->
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeAddEventModal()">
+                    Cancel
+                </button>
+                <button class="btn btn-primary" onclick="saveEvent()" id="saveButton">
+                    Add to Timeline
+                </button>
             </div>
         </div>
     </div>
@@ -847,38 +1459,359 @@
             }, 150);
         }
 
-        function updateStatus() {
-            // Simple status update - could be enhanced with a modal
-            const currentStatus = '{{ $application->status }}';
-            const statuses = ['applied', 'interviewing', 'offer', 'rejected', 'withdrawn'];
-            const currentIndex = statuses.indexOf(currentStatus);
-            const nextStatus = statuses[(currentIndex + 1) % statuses.length];
+        // Add Event Modal Functionality
+        let currentEventType = 'interview';
+
+        function addEvent() {
+            console.log('Opening add event modal...');
+            showAddEventModal();
+        }
+
+        function showAddEventModal() {
+            const modal = document.getElementById('addEventModalOverlay');
+            modal.style.display = 'flex';
             
-            if (confirm(`Update status from "${currentStatus}" to "${nextStatus}"?`)) {
-                // Make AJAX request to update status
-                fetch(`/applications/{{ $application->id }}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({
-                        status: nextStatus
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Failed to update status');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while updating status');
-                });
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.querySelectorAll('#addEventModalOverlay input[type="date"]').forEach(input => {
+                if (!input.value) input.value = today;
+            });
+            
+            // Set default time to next hour
+            const nextHour = new Date();
+            nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
+            const timeString = nextHour.toTimeString().slice(0, 5);
+            document.querySelectorAll('#addEventModalOverlay input[type="time"]').forEach(input => {
+                if (!input.value) input.value = timeString;
+            });
+            
+            // Auto-focus first input
+            setTimeout(() => {
+                const firstInput = document.querySelector('#addEventModalOverlay .form-content.active .form-input');
+                if (firstInput) firstInput.focus();
+            }, 500);
+        }
+
+        function closeAddEventModal() {
+            const modal = document.getElementById('addEventModalOverlay');
+            modal.style.animation = 'overlayFadeOut 0.3s cubic-bezier(0.23, 1, 0.32, 1) forwards';
+            
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modal.style.animation = '';
+                resetAddEventForm();
+            }, 300);
+        }
+
+        function resetAddEventForm() {
+            // Reset to interview form
+            currentEventType = 'interview';
+            document.querySelectorAll('.type-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector('[data-type="interview"]').classList.add('active');
+            
+            // Reset forms
+            document.querySelectorAll('.form-content').forEach(form => {
+                form.classList.remove('active');
+                form.reset();
+            });
+            document.getElementById('interviewForm').classList.add('active');
+            
+            // Reset button text
+            document.getElementById('saveButton').textContent = 'Add Interview';
+        }
+
+        function selectEventType(type) {
+            currentEventType = type;
+            
+            // Update active button
+            document.querySelectorAll('.type-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-type="${type}"]`).classList.add('active');
+            
+            // Hide all forms
+            document.querySelectorAll('.form-content').forEach(form => {
+                form.classList.remove('active');
+            });
+            
+            // Show selected form
+            const formMap = {
+                'interview': 'interviewForm',
+                'note': 'noteForm',
+                'followup': 'followupForm',
+                'rejected': 'rejectedForm'
+            };
+            
+            document.getElementById(formMap[type]).classList.add('active');
+            
+            // Update button text
+            const saveButton = document.getElementById('saveButton');
+            const buttonTextMap = {
+                'interview': 'Add Interview',
+                'note': 'Add Note',
+                'followup': 'Add Follow-up',
+                'rejected': 'Add Rejection'
+            };
+            saveButton.textContent = buttonTextMap[type];
+            
+            // Focus first input
+            setTimeout(() => {
+                const activeForm = document.querySelector('.form-content.active');
+                const firstInput = activeForm.querySelector('.form-input, .form-textarea');
+                if (firstInput) firstInput.focus();
+            }, 100);
+        }
+
+        function insertQuickText(text) {
+            const textarea = document.querySelector('#noteForm .form-textarea');
+            const currentValue = textarea.value;
+            const newValue = currentValue ? `${currentValue}\n\n${text}` : text;
+            textarea.value = newValue;
+            textarea.focus();
+            
+            // Position cursor at end
+            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        }
+
+        function saveEvent() {
+            const activeForm = document.querySelector('.form-content.active');
+            const formData = new FormData(activeForm);
+            const saveButton = document.getElementById('saveButton');
+            
+            // Basic validation
+            const requiredFields = activeForm.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.style.borderColor = '#ea4335';
+                    field.focus();
+                    
+                    setTimeout(() => {
+                        field.style.borderColor = '';
+                    }, 2000);
+                }
+            });
+            
+            if (!isValid) {
+                // Shake animation for invalid form
+                activeForm.style.animation = 'shake 0.5s ease-in-out';
+                setTimeout(() => {
+                    activeForm.style.animation = '';
+                }, 500);
+                return;
             }
+            
+            // Add loading state
+            activeForm.classList.add('loading');
+            saveButton.textContent = 'Adding...';
+            
+            // Prepare data for backend
+            const eventData = {
+                type: currentEventType,
+                application_id: {{ $application->id }},
+                _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            };
+            
+            // Add form data to eventData
+            for (let [key, value] of formData.entries()) {
+                eventData[key] = value;
+            }
+            
+            // Make AJAX request to save event
+            fetch('/applications/{{ $application->id }}/events', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': eventData._token
+                },
+                body: JSON.stringify(eventData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Add event to timeline visually
+                    addEventToTimeline(currentEventType, eventData);
+                    
+                    // If this was a rejected event, update the status badge and refresh the page
+                    if (currentEventType === 'rejected' && data.data.application_status) {
+                        // Update the status badge immediately
+                        const statusBadge = document.querySelector('.status-badge');
+                        if (statusBadge) {
+                            statusBadge.textContent = 'Rejected';
+                            statusBadge.className = 'status-badge rejected';
+                        }
+                        
+                        // Success animation
+                        saveButton.textContent = 'Application Rejected!';
+                        saveButton.style.background = 'linear-gradient(135deg, #34a853 0%, #2e7d32 100%)';
+                        
+                        setTimeout(() => {
+                            closeAddEventModal();
+                            // Refresh the page to show updated status throughout
+                            window.location.reload();
+                        }, 1200);
+                    } else {
+                        // Success animation for other event types
+                        saveButton.textContent = 'Added!';
+                        saveButton.style.background = 'linear-gradient(135deg, #34a853 0%, #2e7d32 100%)';
+                        
+                        setTimeout(() => {
+                            closeAddEventModal();
+                        }, 800);
+                    }
+                } else {
+                    // Handle error
+                    activeForm.classList.remove('loading');
+                    saveButton.textContent = 'Error - Try Again';
+                    saveButton.style.background = 'linear-gradient(135deg, #ea4335 0%, #d32f2f 100%)';
+                    
+                    setTimeout(() => {
+                        saveButton.textContent = buttonTextMap[currentEventType] || 'Add to Timeline';
+                        saveButton.style.background = '';
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Fallback: still add to timeline visually
+                addEventToTimeline(currentEventType, eventData);
+                
+                // For rejected events, still update the UI even if there was an error
+                if (currentEventType === 'rejected') {
+                    // Update the status badge
+                    const statusBadge = document.querySelector('.status-badge');
+                    if (statusBadge) {
+                        statusBadge.textContent = 'Rejected';
+                        statusBadge.className = 'status-badge rejected';
+                    }
+                    
+                    saveButton.textContent = 'Application Rejected!';
+                    saveButton.style.background = 'linear-gradient(135deg, #34a853 0%, #2e7d32 100%)';
+                    
+                    setTimeout(() => {
+                        closeAddEventModal();
+                        window.location.reload();
+                    }, 1200);
+                } else {
+                    // Success animation for other event types
+                    saveButton.textContent = 'Added!';
+                    saveButton.style.background = 'linear-gradient(135deg, #34a853 0%, #2e7d32 100%)';
+                    
+                    setTimeout(() => {
+                        closeAddEventModal();
+                    }, 800);
+                }
+            });
+        }
+
+        function addEventToTimeline(eventType, formData) {
+            const timeline = document.querySelector('.timeline');
+            const eventData = extractEventData(eventType, formData);
+            
+            // Create new timeline event
+            const newEvent = document.createElement('div');
+            newEvent.className = 'timeline-event upcoming';
+            newEvent.onclick = function() { expandEvent(this); };
+            
+            newEvent.innerHTML = `
+                <div class="event-header">
+                    <h4 class="event-title">${eventData.title}</h4>
+                    <span class="event-date">${eventData.date}</span>
+                </div>
+                <p class="event-description">
+                    ${eventData.description}
+                </p>
+                <div class="event-details">
+                    ${eventData.tags.map(tag => `<span class="event-tag">${tag}</span>`).join('')}
+                </div>
+                ${eventData.notes ? `<div class="event-notes">${eventData.notes}</div>` : ''}
+            `;
+            
+            // Add to timeline (insert before existing upcoming events or at the end)
+            const upcomingEvents = timeline.querySelectorAll('.timeline-event.upcoming');
+            if (upcomingEvents.length > 0) {
+                timeline.insertBefore(newEvent, upcomingEvents[0]);
+            } else {
+                timeline.appendChild(newEvent);
+            }
+            
+            // Animate the new event
+            newEvent.style.opacity = '0';
+            newEvent.style.transform = 'translateX(-30px)';
+            
+            setTimeout(() => {
+                newEvent.style.transition = 'all 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
+                newEvent.style.opacity = '1';
+                newEvent.style.transform = 'translateX(0)';
+            }, 100);
+        }
+
+        function extractEventData(eventType, formData) {
+            const data = {
+                title: '',
+                description: '',
+                date: '',
+                tags: [],
+                notes: ''
+            };
+            
+            if (eventType === 'interview') {
+                const title = formData.title || 'New Interview';
+                const interviewType = formData.interview_type || 'Interview';
+                const dateInput = formData.date;
+                const timeInput = formData.time;
+                const notes = formData.notes || '';
+                
+                data.title = title;
+                data.description = `${interviewType.charAt(0).toUpperCase() + interviewType.slice(1)} scheduled`;
+                data.date = formatEventDate(dateInput);
+                data.tags = [interviewType.charAt(0).toUpperCase() + interviewType.slice(1), timeInput ? `${timeInput}` : 'Scheduled'];
+                data.notes = notes;
+            } else if (eventType === 'note') {
+                const title = formData.title || 'New Note';
+                const content = formData.content || '';
+                
+                data.title = title;
+                data.description = content.substring(0, 100) + (content.length > 100 ? '...' : '');
+                data.date = formatEventDate(new Date().toISOString().split('T')[0]);
+                data.tags = ['Note', 'Personal'];
+                data.notes = content.length > 100 ? content : '';
+            } else if (eventType === 'followup') {
+                const action = formData.action || 'Follow-up Action';
+                const dueDate = formData.due_date;
+                const priority = formData.priority || 'medium';
+                const details = formData.details || '';
+                
+                data.title = action.charAt(0).toUpperCase() + action.slice(1);
+                data.description = `${priority.charAt(0).toUpperCase() + priority.slice(1)} priority follow-up task`;
+                data.date = formatEventDate(dueDate);
+                data.tags = ['Follow-up', priority.charAt(0).toUpperCase() + priority.slice(1)];
+                data.notes = details;
+            } else if (eventType === 'rejected') {
+                const reason = formData.reason || 'Application Rejected';
+                const rejectionDate = formData.rejection_date;
+                const feedback = formData.feedback || '';
+                const notes = formData.notes || '';
+                const reapply = formData.reapply_future ? 'Reapply Future' : '';
+                
+                data.title = 'Application Rejected';
+                data.description = reason.replace('_', ' ').charAt(0).toUpperCase() + reason.replace('_', ' ').slice(1);
+                data.date = formatEventDate(rejectionDate);
+                data.tags = ['Rejected', reapply].filter(tag => tag);
+                data.notes = feedback || notes;
+            }
+            
+            return data;
+        }
+
+        function formatEventDate(dateString) {
+            if (!dateString) return 'TBD';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
 
         // Add smooth scrolling and parallax effects
@@ -945,13 +1878,40 @@
 
         // Add keyboard navigation
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'u' && e.ctrlKey) {
-                e.preventDefault();
-                updateStatus();
-            } else if (e.key === 'Escape') {
-                window.location.href = '{{ route("applications.index") }}';
+            const addEventModal = document.getElementById('addEventModalOverlay');
+            
+            if (addEventModal && addEventModal.style.display === 'flex') {
+                // Modal is open
+                if (e.key === 'Escape') {
+                    closeAddEventModal();
+                } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    saveEvent();
+                } else if (e.key === '1' && e.altKey) {
+                    e.preventDefault();
+                    selectEventType('interview');
+                } else if (e.key === '2' && e.altKey) {
+                    e.preventDefault();
+                    selectEventType('note');
+                } else if (e.key === '3' && e.altKey) {
+                    e.preventDefault();
+                    selectEventType('followup');
+                }
+            } else {
+                // Modal is not open
+                if (e.key === 'a' && e.ctrlKey) {
+                    e.preventDefault();
+                    addEvent();
+                } else if (e.key === 'Escape') {
+                    window.location.href = '{{ route("applications.index") }}';
+                }
             }
         });
     </script>
-</body>
-</html>
+
+    <x-slot name="scripts">
+        <script>
+            // Application detail specific JavaScript
+        </script>
+    </x-slot>
+</x-layout>

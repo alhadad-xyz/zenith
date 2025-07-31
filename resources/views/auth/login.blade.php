@@ -732,18 +732,16 @@
 
                     <div id="loginAlert"></div>
 
-                    <div class="form-group">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" name="email" class="form-input" placeholder="your@email.com" required>
-                    </div>
+                    <x-form-group label="Email Address" required>
+                        <x-form-input name="email" type="email" placeholder="your@email.com" required />
+                    </x-form-group>
 
-                    <div class="form-group">
-                        <label class="form-label">Password</label>
+                    <x-form-group label="Password" required>
                         <div class="password-group">
-                            <input type="password" name="password" class="form-input" placeholder="••••••••" id="loginPassword" required>
+                            <x-form-input name="password" type="password" placeholder="••••••••" id="loginPassword" required />
                             <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">Show</button>
                         </div>
-                    </div>
+                    </x-form-group>
 
                     <div class="form-options">
                         <div class="checkbox-group">
@@ -776,23 +774,20 @@
 
                     <div id="signupAlert"></div>
 
-                    <div class="form-group">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" name="name" class="form-input" placeholder="John Doe" required>
-                    </div>
+                    <x-form-group label="Full Name" required>
+                        <x-form-input name="name" type="text" placeholder="John Doe" required />
+                    </x-form-group>
 
-                    <div class="form-group">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" name="email" class="form-input" placeholder="your@email.com" required>
-                    </div>
+                    <x-form-group label="Email Address" required>
+                        <x-form-input name="email" type="email" placeholder="your@email.com" required />
+                    </x-form-group>
 
-                    <div class="form-group">
-                        <label class="form-label">Password</label>
+                    <x-form-group label="Password" required>
                         <div class="password-group">
-                            <input type="password" name="password" class="form-input" placeholder="••••••••" id="signupPassword" required>
+                            <x-form-input name="password" type="password" placeholder="••••••••" id="signupPassword" required />
                             <button type="button" class="password-toggle" onclick="togglePassword('signupPassword')">Show</button>
                         </div>
-                    </div>
+                    </x-form-group>
 
                     <div class="form-options">
                         <div class="checkbox-group">
