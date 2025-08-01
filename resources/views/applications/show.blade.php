@@ -951,6 +951,149 @@
                 width: 100%;
             }
         }
+
+        /* Resume Analysis Styles */
+        .analysis-section {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .score-card {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .score-label {
+            font-size: 0.8rem;
+            color: #6b7c6d;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .score-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3e2e;
+            line-height: 1;
+        }
+
+        .analysis-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .analysis-list li {
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid transparent;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .strengths-list li {
+            border-left-color: #34a853;
+            background: rgba(52, 168, 83, 0.1);
+        }
+
+        .weaknesses-list li {
+            border-left-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .recommendations-list li {
+            border-left-color: #9c27b0;
+            background: rgba(156, 39, 176, 0.1);
+        }
+
+        .keywords-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .keyword-tag {
+            background: rgba(255, 167, 38, 0.1);
+            color: #f57f17;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 167, 38, 0.3);
+        }
+
+        .suggestions-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .suggestion-card {
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            padding: 1rem;
+            border-left: 3px solid #4285f4;
+        }
+
+        .suggestion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .suggestion-category {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #4285f4;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .suggestion-priority {
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .suggestion-priority.high {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+
+        .suggestion-priority.medium {
+            background: rgba(255, 167, 38, 0.2);
+            color: #ffa726;
+        }
+
+        .suggestion-priority.low {
+            background: rgba(107, 124, 109, 0.2);
+            color: #6b7c6d;
+        }
+
+        .suggestion-text {
+            font-size: 0.9rem;
+            color: #2d3e2e;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .suggestion-impact {
+            font-size: 0.8rem;
+            color: #6b7c6d;
+            font-style: italic;
+        }
         </style>
     </x-slot>
     <div class="floating-elements">
@@ -1240,6 +1383,9 @@
                     <button class="btn btn-secondary" onclick="showGenerateCoverLetterModal()">
                         Generate Cover Letter
                     </button>
+                    <button class="btn btn-secondary" onclick="showResumeAnalysisModal()">
+                        Analyze Resume
+                    </button>
                     @endif
                     <button class="btn btn-primary" onclick="addEvent()">
                         Add Event
@@ -1507,6 +1653,99 @@
                 </button>
                 <button class="btn btn-primary" onclick="generateCoverLetter()" id="generateButton">
                     🤖 Generate Cover Letter
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resume Analysis Modal -->
+    <div class="modal-overlay" id="resumeAnalysisModalOverlay" style="display: none;">
+        <div class="add-event-modal" style="max-width: 900px;">
+            <!-- Header -->
+            <div class="modal-header">
+                <h2 class="modal-title">🔍 AI Resume Analysis</h2>
+                <button class="close-button" onclick="closeResumeAnalysisModal()" aria-label="Close modal">×</button>
+            </div>
+
+            <!-- Analysis Results Container -->
+            <div class="form-container" style="max-height: 70vh;">
+                <!-- Loading State -->
+                <div id="analysisLoading" style="text-align: center; padding: 2rem;">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">🤖</div>
+                    <h3 style="color: #2d3e2e; margin-bottom: 0.5rem;">Analyzing Your Resume...</h3>
+                    <p style="color: #6b7c6d;">This may take a moment while our AI reviews your resume against the job requirements.</p>
+                </div>
+
+                <!-- Analysis Results -->
+                <div id="analysisResults" style="display: none;">
+                    <!-- Overall Score Section -->
+                    <div class="analysis-section" style="margin-bottom: 2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 style="color: #2d3e2e; margin: 0;">Overall Assessment</h3>
+                            <div id="aiProviderBadge" style="background: rgba(255, 107, 107, 0.1); color: #ff6b6b; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;"></div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                            <div class="score-card">
+                                <div class="score-label">Overall Score</div>
+                                <div class="score-value" id="overallScore">--</div>
+                            </div>
+                            <div class="score-card">
+                                <div class="score-label">Job Match</div>
+                                <div class="score-value" id="matchPercentage">--%</div>
+                            </div>
+                        </div>
+                        <div class="score-card" style="margin-bottom: 1rem;">
+                            <div class="score-label">ATS Optimization Score</div>
+                            <div class="score-value" id="atsScore">--</div>
+                        </div>
+                    </div>
+
+                    <!-- Strengths Section -->
+                    <div class="analysis-section" style="margin-bottom: 2rem;">
+                        <h4 style="color: #2d3e2e; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #34a853;">✅</span> Key Strengths</h4>
+                        <ul id="strengthsList" class="analysis-list strengths-list"></ul>
+                    </div>
+
+                    <!-- Areas for Improvement -->
+                    <div class="analysis-section" style="margin-bottom: 2rem;">
+                        <h4 style="color: #2d3e2e; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #ff6b6b;">⚠️</span> Areas for Improvement</h4>
+                        <ul id="weaknessesList" class="analysis-list weaknesses-list"></ul>
+                    </div>
+
+                    <!-- Missing Keywords -->
+                    <div class="analysis-section" style="margin-bottom: 2rem;">
+                        <h4 style="color: #2d3e2e; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #ffa726;">🔑</span> Missing Keywords</h4>
+                        <div id="keywordsList" class="keywords-container"></div>
+                    </div>
+
+                    <!-- Improvement Suggestions -->
+                    <div class="analysis-section" style="margin-bottom: 2rem;">
+                        <h4 style="color: #2d3e2e; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #4285f4;">💡</span> Improvement Suggestions</h4>
+                        <div id="suggestionsList" class="suggestions-container"></div>
+                    </div>
+
+                    <!-- Key Recommendations -->
+                    <div class="analysis-section">
+                        <h4 style="color: #2d3e2e; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #9c27b0;">🎯</span> Key Recommendations</h4>
+                        <ul id="recommendationsList" class="analysis-list recommendations-list"></ul>
+                    </div>
+                </div>
+
+                <!-- Error State -->
+                <div id="analysisError" style="display: none; text-align: center; padding: 2rem;">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">❌</div>
+                    <h3 style="color: #ea4335; margin-bottom: 0.5rem;">Analysis Failed</h3>
+                    <p id="errorMessage" style="color: #6b7c6d;"></p>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeResumeAnalysisModal()">
+                    Close
+                </button>
+                <button class="btn btn-primary" onclick="analyzeResume()" id="analyzeButton">
+                    Analyze Resume
                 </button>
             </div>
         </div>
@@ -2222,10 +2461,226 @@
             }, 2000);
         }
 
+        // Resume Analysis Modal Functions
+        function showResumeAnalysisModal() {
+            const modal = document.getElementById('resumeAnalysisModalOverlay');
+            modal.style.display = 'flex';
+            
+            // Reset modal state
+            document.getElementById('analysisLoading').style.display = 'block';
+            document.getElementById('analysisResults').style.display = 'none';
+            document.getElementById('analysisError').style.display = 'none';
+            document.getElementById('analyzeButton').textContent = '🔍 Analyze Resume';
+            document.getElementById('analyzeButton').style.background = '';
+            
+            // Auto-start analysis
+            setTimeout(() => {
+                analyzeResume();
+            }, 500);
+        }
+
+        function closeResumeAnalysisModal() {
+            const modal = document.getElementById('resumeAnalysisModalOverlay');
+            modal.style.animation = 'overlayFadeOut 0.3s cubic-bezier(0.23, 1, 0.32, 1) forwards';
+            
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modal.style.animation = '';
+            }, 300);
+        }
+
+        function analyzeResume() {
+            const analyzeButton = document.getElementById('analyzeButton');
+            
+            // Show loading state
+            document.getElementById('analysisLoading').style.display = 'block';
+            document.getElementById('analysisResults').style.display = 'none';
+            document.getElementById('analysisError').style.display = 'none';
+            analyzeButton.textContent = '🤖 Analyzing...';
+            analyzeButton.disabled = true;
+            
+            // Make AJAX request to analyze resume
+            fetch('/applications/{{ $application->id }}/analyze-resume', {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayAnalysisResults(data.analysis, data.ai_provider, data.ai_available);
+                    
+                    // Success state
+                    analyzeButton.textContent = data.ai_available 
+                        ? `🤖 Analyzed with ${data.ai_provider.toUpperCase()}!`
+                        : '✅ Analysis Complete!';
+                    analyzeButton.style.background = 'linear-gradient(135deg, #34a853 0%, #2e7d32 100%)';
+                    
+                    setTimeout(() => {
+                        analyzeButton.textContent = '🔄 Re-analyze';
+                        analyzeButton.style.background = '';
+                        analyzeButton.disabled = false;
+                    }, 2000);
+                } else {
+                    // Show error
+                    document.getElementById('analysisLoading').style.display = 'none';
+                    document.getElementById('analysisError').style.display = 'block';
+                    document.getElementById('errorMessage').textContent = data.message;
+                    
+                    analyzeButton.textContent = 'Error - Try Again';
+                    analyzeButton.style.background = 'linear-gradient(135deg, #ea4335 0%, #d32f2f 100%)';
+                    
+                    setTimeout(() => {
+                        analyzeButton.textContent = '🔍 Analyze Resume';
+                        analyzeButton.style.background = '';
+                        analyzeButton.disabled = false;
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                
+                // Show error
+                document.getElementById('analysisLoading').style.display = 'none';
+                document.getElementById('analysisError').style.display = 'block';
+                document.getElementById('errorMessage').textContent = 'Network error occurred. Please try again.';
+                
+                analyzeButton.textContent = 'Error - Try Again';
+                analyzeButton.style.background = 'linear-gradient(135deg, #ea4335 0%, #d32f2f 100%)';
+                
+                setTimeout(() => {
+                    analyzeButton.textContent = '🔍 Analyze Resume';
+                    analyzeButton.style.background = '';
+                    analyzeButton.disabled = false;
+                }, 3000);
+            });
+        }
+
+        function displayAnalysisResults(analysis, aiProvider, aiAvailable) {
+            // Hide loading, show results
+            document.getElementById('analysisLoading').style.display = 'none';
+            document.getElementById('analysisResults').style.display = 'block';
+            
+            // Update AI provider badge
+            const providerBadge = document.getElementById('aiProviderBadge');
+            if (aiAvailable && aiProvider !== 'fallback') {
+                providerBadge.textContent = `Powered by ${aiProvider.toUpperCase()}`;
+                providerBadge.style.background = 'rgba(52, 168, 83, 0.1)';
+                providerBadge.style.color = '#34a853';
+            } else {
+                providerBadge.textContent = 'Basic Analysis';
+                providerBadge.style.background = 'rgba(107, 124, 109, 0.1)';
+                providerBadge.style.color = '#6b7c6d';
+            }
+            
+            // Update scores
+            document.getElementById('overallScore').textContent = analysis.overall_score || '--';
+            document.getElementById('matchPercentage').textContent = (analysis.match_percentage || '--') + '%';
+            document.getElementById('atsScore').textContent = analysis.ats_optimization?.score || '--';
+            
+            // Update strengths
+            const strengthsList = document.getElementById('strengthsList');
+            strengthsList.innerHTML = '';
+            if (analysis.strengths && analysis.strengths.length > 0) {
+                analysis.strengths.forEach(strength => {
+                    const li = document.createElement('li');
+                    li.textContent = strength;
+                    strengthsList.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = 'No specific strengths identified.';
+                li.style.opacity = '0.7';
+                strengthsList.appendChild(li);
+            }
+            
+            // Update weaknesses
+            const weaknessesList = document.getElementById('weaknessesList');
+            weaknessesList.innerHTML = '';
+            if (analysis.weaknesses && analysis.weaknesses.length > 0) {
+                analysis.weaknesses.forEach(weakness => {
+                    const li = document.createElement('li');
+                    li.textContent = weakness;
+                    weaknessesList.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = 'No specific areas for improvement identified.';
+                li.style.opacity = '0.7';
+                weaknessesList.appendChild(li);
+            }
+            
+            // Update missing keywords
+            const keywordsList = document.getElementById('keywordsList');
+            keywordsList.innerHTML = '';
+            if (analysis.missing_keywords && analysis.missing_keywords.length > 0) {
+                analysis.missing_keywords.forEach(keyword => {
+                    const span = document.createElement('span');
+                    span.className = 'keyword-tag';
+                    span.textContent = keyword;
+                    keywordsList.appendChild(span);
+                });
+            } else {
+                const span = document.createElement('span');
+                span.style.color = '#6b7c6d';
+                span.style.fontStyle = 'italic';
+                span.textContent = 'No missing keywords identified.';
+                keywordsList.appendChild(span);
+            }
+            
+            // Update improvement suggestions
+            const suggestionsList = document.getElementById('suggestionsList');
+            suggestionsList.innerHTML = '';
+            if (analysis.improvement_suggestions && analysis.improvement_suggestions.length > 0) {
+                analysis.improvement_suggestions.forEach(suggestion => {
+                    const card = document.createElement('div');
+                    card.className = 'suggestion-card';
+                    
+                    card.innerHTML = `
+                        <div class="suggestion-header">
+                            <span class="suggestion-category">${suggestion.category || 'General'}</span>
+                            <span class="suggestion-priority ${(suggestion.priority || 'medium').toLowerCase()}">${suggestion.priority || 'Medium'}</span>
+                        </div>
+                        <div class="suggestion-text">${suggestion.suggestion || ''}</div>
+                        <div class="suggestion-impact">${suggestion.impact || ''}</div>
+                    `;
+                    
+                    suggestionsList.appendChild(card);
+                });
+            } else {
+                const card = document.createElement('div');
+                card.style.color = '#6b7c6d';
+                card.style.fontStyle = 'italic';
+                card.textContent = 'No specific suggestions available.';
+                suggestionsList.appendChild(card);
+            }
+            
+            // Update key recommendations
+            const recommendationsList = document.getElementById('recommendationsList');
+            recommendationsList.innerHTML = '';
+            if (analysis.key_recommendations && analysis.key_recommendations.length > 0) {
+                analysis.key_recommendations.forEach(recommendation => {
+                    const li = document.createElement('li');
+                    li.textContent = recommendation;
+                    recommendationsList.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = 'No specific recommendations available.';
+                li.style.opacity = '0.7';
+                recommendationsList.appendChild(li);
+            }
+            
+            // Scroll to top of results
+            document.getElementById('analysisResults').scrollTop = 0;
+        }
+
         // Add keyboard navigation
         document.addEventListener('keydown', function(e) {
             const addEventModal = document.getElementById('addEventModalOverlay');
             const coverLetterModal = document.getElementById('generateCoverLetterModalOverlay');
+            const resumeAnalysisModal = document.getElementById('resumeAnalysisModalOverlay');
             
             if (addEventModal && addEventModal.style.display === 'flex') {
                 // Add Event Modal is open
@@ -2252,6 +2707,14 @@
                     e.preventDefault();
                     generateCoverLetter();
                 }
+            } else if (resumeAnalysisModal && resumeAnalysisModal.style.display === 'flex') {
+                // Resume Analysis Modal is open
+                if (e.key === 'Escape') {
+                    closeResumeAnalysisModal();
+                } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    analyzeResume();
+                }
             } else {
                 // No modal is open
                 if (e.key === 'a' && e.ctrlKey) {
@@ -2261,6 +2724,11 @@
                     e.preventDefault();
                     @if($application->resume_path)
                     showGenerateCoverLetterModal();
+                    @endif
+                } else if (e.key === 'r' && e.ctrlKey && e.shiftKey) {
+                    e.preventDefault();
+                    @if($application->resume_path)
+                    showResumeAnalysisModal();
                     @endif
                 } else if (e.key === 'Escape') {
                     window.location.href = '{{ route("applications.index") }}';

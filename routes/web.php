@@ -34,6 +34,9 @@ Route::middleware('auth')->group(function () {
     Route::get('applications/{application}/extract-resume-text', [JobApplicationController::class, 'extractResumeText'])->name('applications.extract-resume-text');
     Route::post('applications/{application}/generate-cover-letter', [JobApplicationController::class, 'generateCoverLetter'])->name('applications.generate-cover-letter');
     
+    // Resume Analysis routes
+    Route::get('applications/{application}/analyze-resume', [JobApplicationController::class, 'analyzeResume'])->name('applications.analyze-resume');
+    
     // Debug route for testing AI service
     Route::post('applications/{application}/test-ai', function(\App\Models\JobApplication $application) {
         try {

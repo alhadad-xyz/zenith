@@ -6,8 +6,10 @@ use App\Models\ApplicationEvent;
 use App\Models\JobApplication;
 use App\Services\DocumentTextExtractor;
 use App\Services\CoverLetterAIService;
+use App\Services\ResumeAnalyzerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class JobApplicationController extends Controller
@@ -671,6 +673,85 @@ class JobApplicationController extends Controller
         } catch (\Exception $e) {
             \Log::warning('Interest statement generation failed: ' . $e->getMessage());
             return "it aligns well with my career goals and experience.";
+        }
+    }
+
+    public function analyzeResume(JobApplication $application)
+    {
+        try {
+            // Check if the application belongs to the authenticated user
+            if ($application->user_id !== Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access to this application.'
+                ], 403);
+            }
+
+            if (!$application->resume_path) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No resume attached to this application.'
+                ]);
+            }
+
+            // Extract resume text
+            $extractor = new DocumentTextExtractor();
+            
+            if (!$extractor->isSupported($application->resume_path)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Resume file type not supported for analysis.',
+                    'supported_types' => ['PDF', 'DOC', 'DOCX', 'TXT']
+                ]);
+            }
+
+            $resumeText = $extractor->extractText($application->resume_path);
+            
+            if (empty(trim($resumeText))) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Could not extract text from the resume file for analysis.'
+                ]);
+            }
+
+            // Analyze resume using AI service
+            Log::info('Starting AI resume analysis', [
+                'application_id' => $application->id,
+                'resume_length' => strlen($resumeText)
+            ]);
+
+            $analyzer = new ResumeAnalyzerService();
+            $analysis = $analyzer->analyzeResume($application, $resumeText);
+
+            Log::info('Resume analysis completed', [
+                'application_id' => $application->id,
+                'provider' => $analyzer->getProvider(),
+                'overall_score' => $analysis['overall_score']
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'analysis' => $analysis,
+                'resume_preview' => $extractor->getTextPreview($resumeText),
+                'ai_provider' => $analyzer->getProvider(),
+                'ai_available' => $analyzer->isAIAvailable(),
+                'message' => $analyzer->isAIAvailable() 
+                    ? 'AI-powered resume analysis completed successfully!' 
+                    : 'Resume analysis completed successfully!'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Resume analysis failed: ' . $e->getMessage(), [
+                'application_id' => $application->id,
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while analyzing the resume: ' . $e->getMessage()
+            ], 500);
         }
     }
 }
