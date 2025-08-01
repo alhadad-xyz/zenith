@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\ApplicationEvent;
 use App\Models\JobApplication;
+use App\Services\DocumentTextExtractor;
+use App\Services\CoverLetterAIService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -405,12 +407,270 @@ class JobApplicationController extends Controller
 
     private function getDefaultTitle(string $type): string
     {
-        return match ($type) {
-            'interview' => 'Interview Scheduled',
-            'note' => 'Note Added',
-            'followup' => 'Follow-up Action',
-            'rejected' => 'Application Rejected',
-            default => 'Timeline Event',
-        };
+        switch ($type) {
+            case 'interview':
+                return 'Interview Scheduled';
+            case 'note':
+                return 'Note Added';
+            case 'followup':
+                return 'Follow-up Action';
+            case 'rejected':
+                return 'Application Rejected';
+            default:
+                return 'Timeline Event';
+        }
+    }
+
+    public function extractResumeText(JobApplication $application)
+    {
+        try {
+            // Check if the application belongs to the authenticated user
+            if ($application->user_id !== Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access to this application.'
+                ], 403);
+            }
+
+            if (!$application->resume_path) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No resume attached to this application.'
+                ]);
+            }
+
+            $extractor = new DocumentTextExtractor();
+            
+            if (!$extractor->isSupported($application->resume_path)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Resume file type not supported for text extraction.',
+                    'supported_types' => ['PDF', 'DOC', 'DOCX', 'TXT']
+                ]);
+            }
+
+            $resumeText = $extractor->extractText($application->resume_path);
+            
+            if (empty(trim($resumeText))) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Could not extract text from the resume file. The file might be an image-based PDF or corrupted.'
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'resume_text' => $resumeText,
+                'preview' => $extractor->getTextPreview($resumeText),
+                'message' => 'Resume text extracted successfully!'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Resume text extraction failed: ' . $e->getMessage(), [
+                'application_id' => $application->id,
+                'resume_path' => $application->resume_path,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to extract text from resume. Please try pasting your resume content manually.'
+            ], 500);
+        }
+    }
+
+    public function generateCoverLetter(Request $request, JobApplication $application)
+    {
+        \Log::info('Cover letter generation request received', [
+            'application_id' => $application->id,
+            'user_id' => Auth::id()
+        ]);
+
+        // Check if the application belongs to the authenticated user
+        if ($application->user_id !== Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access to this application.'
+            ], 403);
+        }
+
+        try {
+            // Get input data
+            $resumeContent = $request->input('resume_content', '');
+            $additionalInfo = $request->input('additional_info', '') ?? '';
+            $useAttachedResume = $request->boolean('use_attached_resume', false);
+
+            \Log::info('Input validation', [
+                'has_resume_content' => !empty($resumeContent),
+                'has_additional_info' => !empty($additionalInfo),
+                'use_attached_resume' => $useAttachedResume
+            ]);
+
+            // Handle resume extraction if needed
+            if ($useAttachedResume && $application->resume_path) {
+                try {
+                    $extractor = new DocumentTextExtractor();
+                    if ($extractor->isSupported($application->resume_path)) {
+                        $extractedText = $extractor->extractText($application->resume_path);
+                        if (!empty(trim($extractedText))) {
+                            $resumeContent = $extractedText;
+                            \Log::info('Resume text extracted successfully', [
+                                'length' => strlen($extractedText)
+                            ]);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    $useAttachedResume = false;
+                    \Log::warning('Resume extraction failed: ' . $e->getMessage());
+                }
+            }
+
+            // Validate resume content
+            if (empty(trim($resumeContent))) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Resume content is required to generate a cover letter.'
+                ]);
+            }
+
+            // Generate cover letter using AI service
+            \Log::info('Starting AI cover letter generation');
+            $aiService = new CoverLetterAIService();
+            $coverLetter = $aiService->generateCoverLetter($application, $resumeContent, $additionalInfo);
+
+            \Log::info('Cover letter generation completed', [
+                'provider' => $aiService->getProvider(),
+                'ai_available' => $aiService->isAIAvailable(),
+                'cover_letter_length' => strlen($coverLetter)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'cover_letter' => $coverLetter,
+                'used_attached_resume' => $useAttachedResume,
+                'ai_provider' => $aiService->getProvider(),
+                'ai_available' => $aiService->isAIAvailable(),
+                'message' => $aiService->isAIAvailable() 
+                    ? 'AI-powered cover letter generated successfully!' 
+                    : 'Cover letter generated successfully!'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Cover letter generation failed: ' . $e->getMessage(), [
+                'application_id' => $application->id,
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while generating the cover letter: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function generateCoverLetterContent(JobApplication $application, string $resumeContent, string $additionalInfo): string
+    {
+        try {
+            $date = now()->format('F j, Y');
+            
+            $coverLetter = "{$date}\n\nDear Hiring Manager,\n\n";
+            $coverLetter .= "I am writing to express my strong interest in the {$application->job_title} position at {$application->company_name}";
+
+            if ($application->location) {
+                $coverLetter .= " in {$application->location}";
+            }
+
+            $coverLetter .= ". Having thoroughly reviewed the job requirements, I am confident that my background and skills make me an ideal candidate for this role.\n\n";
+
+            // Extract key skills from resume content
+            $keySkills = $this->extractKeySkills($resumeContent);
+            
+            if (!empty($keySkills)) {
+                $coverLetter .= "My experience includes:\n";
+                foreach (array_slice($keySkills, 0, 3) as $skill) {
+                    $cleanSkill = trim(strip_tags($skill));
+                    if (!empty($cleanSkill)) {
+                        $coverLetter .= "• {$cleanSkill}\n";
+                    }
+                }
+                $coverLetter .= "\n";
+            }
+
+            if (!empty($application->job_description)) {
+                $coverLetter .= "I am particularly drawn to this opportunity because ";
+                $coverLetter .= $this->generateInterestStatement($application->job_description);
+                $coverLetter .= "\n\n";
+            }
+
+            if (!empty(trim($additionalInfo))) {
+                $coverLetter .= trim($additionalInfo) . "\n\n";
+            }
+
+            $coverLetter .= "I would welcome the opportunity to discuss how my background and enthusiasm can contribute to {$application->company_name}'s continued success. Thank you for considering my application. I look forward to hearing from you soon.\n\nSincerely,\n[Your Name]";
+
+            return $coverLetter;
+        } catch (\Exception $e) {
+            \Log::error('Cover letter content generation failed: ' . $e->getMessage());
+            
+            // Return a basic cover letter as fallback
+            $date = now()->format('F j, Y');
+            return "{$date}\n\nDear Hiring Manager,\n\nI am writing to express my strong interest in the {$application->job_title} position at {$application->company_name}. Based on my background and experience, I believe I would be a valuable addition to your team.\n\nI would welcome the opportunity to discuss how I can contribute to your organization's success. Thank you for considering my application.\n\nSincerely,\n[Your Name]";
+        }
+    }
+
+    private function extractKeySkills(string $resumeContent): array
+    {
+        try {
+            $skills = [];
+            
+            // Common skill patterns to look for
+            $skillPatterns = [
+                '/experience (?:with|in) ([^,.]+)/i',
+                '/proficient (?:with|in) ([^,.]+)/i',
+                '/skilled (?:with|in) ([^,.]+)/i',
+                '/expertise (?:with|in) ([^,.]+)/i',
+                '/background (?:with|in) ([^,.]+)/i',
+            ];
+
+            foreach ($skillPatterns as $pattern) {
+                $result = preg_match_all($pattern, $resumeContent, $matches);
+                if ($result !== false && !empty($matches[1])) {
+                    $skills = array_merge($skills, $matches[1]);
+                }
+            }
+
+            // Clean up and limit skills
+            $skills = array_map('trim', $skills);
+            $skills = array_unique($skills);
+            $skills = array_filter($skills, function($skill) {
+                return is_string($skill) && strlen($skill) > 3 && strlen($skill) < 100;
+            });
+
+            return array_values($skills);
+        } catch (\Exception $e) {
+            \Log::warning('Skill extraction failed: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    private function generateInterestStatement(string $jobDescription): string
+    {
+        try {
+            $statements = [
+                "it aligns perfectly with my career goals and technical expertise",
+                "of the innovative work environment and growth opportunities",
+                "I am excited about contributing to your team's success",
+                "the role offers the perfect blend of challenge and opportunity",
+                "it represents an excellent opportunity to apply my skills in a dynamic environment"
+            ];
+
+            $randomIndex = array_rand($statements);
+            return $statements[$randomIndex] . ".";
+        } catch (\Exception $e) {
+            \Log::warning('Interest statement generation failed: ' . $e->getMessage());
+            return "it aligns well with my career goals and experience.";
+        }
     }
 }

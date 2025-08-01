@@ -1236,6 +1236,11 @@
                     <button class="btn btn-secondary" onclick="showEditApplicationModal()">
                         Edit Application
                     </button>
+                    @if($application->resume_path)
+                    <button class="btn btn-secondary" onclick="showGenerateCoverLetterModal()">
+                        Generate Cover Letter
+                    </button>
+                    @endif
                     <button class="btn btn-primary" onclick="addEvent()">
                         Add Event
                     </button>
@@ -1424,6 +1429,84 @@
                 </button>
                 <button class="btn btn-primary" onclick="saveEvent()" id="saveButton">
                     Add to Timeline
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generate Cover Letter Modal -->
+    <div class="modal-overlay" id="generateCoverLetterModalOverlay" style="display: none;">
+        <div class="add-event-modal" style="max-width: 700px;">
+            <!-- Header -->
+            <div class="modal-header">
+                <h2 class="modal-title">🤖 Generate AI Cover Letter</h2>
+                <button class="close-button" onclick="closeGenerateCoverLetterModal()" aria-label="Close modal">×</button>
+            </div>
+
+            <!-- Form Container -->
+            <div class="form-container" style="max-height: 60vh;">
+                <form id="generateCoverLetterForm">
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <label class="form-label" style="margin: 0;">Resume Content</label>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: #6b7c6d; cursor: pointer;">
+                                    <input type="checkbox" id="useAttachedResume" checked style="margin: 0;">
+                                    Use attached resume
+                                </label>
+                                <button type="button" id="extractResumeBtn" class="btn" 
+                                        style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: rgba(255, 255, 255, 0.7);"
+                                        onclick="extractResumeText()">
+                                    📄 Extract Text
+                                </button>
+                            </div>
+                        </div>
+                        <textarea class="form-textarea large" name="resume_content" id="resumeContent" 
+                                placeholder="Extracting text from attached resume..." 
+                                style="min-height: 200px;"></textarea>
+                        <div style="margin-top: 0.5rem;">
+                            <small id="resumeHint" style="color: #6b7c6d; font-size: 0.8rem;">
+                                🤖 Automatically extracting text from your attached resume file...
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Additional Information (Optional)</label>
+                        <textarea class="form-textarea" name="additional_info" id="additionalInfo" 
+                                placeholder="Add any specific details you want to highlight for this position..." 
+                                style="min-height: 100px;"></textarea>
+                        <div style="margin-top: 0.5rem;">
+                            <small style="color: #6b7c6d; font-size: 0.8rem;">
+                                Examples: Why you're interested in this company, specific achievements, or personal motivation for this role.
+                            </small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Generated Cover Letter Display -->
+            <div id="generatedCoverLetterSection" style="display: none; margin-top: 2rem;">
+                <div style="border-top: 1px solid rgba(255, 255, 255, 0.2); padding-top: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="font-size: 1.2rem; font-weight: 600; color: #2d3e2e; margin: 0;">Generated Cover Letter</h3>
+                        <button type="button" class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;" onclick="copyCoverLetter()">
+                            📋 Copy
+                        </button>
+                    </div>
+                    <div style="background: rgba(255, 255, 255, 0.3); border-radius: 12px; padding: 1.5rem; max-height: 300px; overflow-y: auto;">
+                        <pre id="coverLetterContent" style="white-space: pre-wrap; font-family: 'Inter', sans-serif; font-size: 0.9rem; line-height: 1.6; color: #2d3e2e; margin: 0;"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeGenerateCoverLetterModal()">
+                    Close
+                </button>
+                <button class="btn btn-primary" onclick="generateCoverLetter()" id="generateButton">
+                    🤖 Generate Cover Letter
                 </button>
             </div>
         </div>
@@ -1876,12 +1959,276 @@
             });
         });
 
+        // Cover Letter Generation Modal Functions
+        function showGenerateCoverLetterModal() {
+            const modal = document.getElementById('generateCoverLetterModalOverlay');
+            modal.style.display = 'flex';
+            
+            // Reset form
+            document.getElementById('generateCoverLetterForm').reset();
+            document.getElementById('generatedCoverLetterSection').style.display = 'none';
+            document.getElementById('generateButton').textContent = '🤖 Generate Cover Letter';
+            document.getElementById('generateButton').style.background = '';
+            
+            // Check the "Use attached resume" checkbox by default
+            document.getElementById('useAttachedResume').checked = true;
+            
+            // Add event listener for the checkbox
+            document.getElementById('useAttachedResume').addEventListener('change', function() {
+                if (this.checked) {
+                    extractResumeText();
+                } else {
+                    const resumeTextarea = document.getElementById('resumeContent');
+                    const resumeHint = document.getElementById('resumeHint');
+                    resumeTextarea.placeholder = 'Paste your resume content here or key skills and experiences...';
+                    resumeTextarea.readOnly = false;
+                    resumeTextarea.value = '';
+                    resumeHint.innerHTML = '💡 Tip: Copy and paste the text content of your resume, or highlight your key skills and experiences relevant to this position.';
+                    setTimeout(() => resumeTextarea.focus(), 100);
+                }
+            });
+            
+            // Automatically extract resume text when modal opens
+            setTimeout(() => {
+                extractResumeText();
+            }, 300);
+        }
+
+        function closeGenerateCoverLetterModal() {
+            const modal = document.getElementById('generateCoverLetterModalOverlay');
+            modal.style.animation = 'overlayFadeOut 0.3s cubic-bezier(0.23, 1, 0.32, 1) forwards';
+            
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modal.style.animation = '';
+            }, 300);
+        }
+
+        function extractResumeText() {
+            const extractButton = document.getElementById('extractResumeBtn');
+            const resumeTextarea = document.getElementById('resumeContent');
+            const resumeHint = document.getElementById('resumeHint');
+            const useAttachedCheckbox = document.getElementById('useAttachedResume');
+            
+            if (!useAttachedCheckbox.checked) {
+                resumeTextarea.placeholder = 'Paste your resume content here or key skills and experiences...';
+                resumeTextarea.readOnly = false;
+                resumeHint.innerHTML = '💡 Tip: Copy and paste the text content of your resume, or highlight your key skills and experiences relevant to this position.';
+                resumeTextarea.focus();
+                return;
+            }
+            
+            // Show loading state
+            extractButton.textContent = '⏳ Extracting...';
+            extractButton.disabled = true;
+            resumeTextarea.placeholder = 'Extracting text from attached resume...';
+            resumeTextarea.value = '';
+            resumeTextarea.readOnly = true;
+            resumeHint.innerHTML = '🤖 Processing your resume file...';
+            
+            // Make AJAX request to extract resume text
+            fetch('/applications/{{ $application->id }}/extract-resume-text', {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resumeTextarea.value = data.resume_text;
+                    resumeTextarea.readOnly = false;
+                    resumeHint.innerHTML = `✅ Text extracted successfully! Preview: "${data.preview}"`;
+                    extractButton.textContent = '✅ Extracted';
+                    extractButton.style.background = 'linear-gradient(135deg, #34a853 0%, #2e7d32 100%)';
+                    extractButton.style.color = 'white';
+                } else {
+                    resumeTextarea.placeholder = 'Failed to extract text. Please paste your resume content manually.';
+                    resumeTextarea.readOnly = false;
+                    resumeHint.innerHTML = `❌ ${data.message} Please paste your resume content manually.`;
+                    extractButton.textContent = '❌ Failed';
+                    extractButton.style.background = 'linear-gradient(135deg, #ea4335 0%, #d32f2f 100%)';
+                    extractButton.style.color = 'white';
+                    useAttachedCheckbox.checked = false;
+                }
+                
+                setTimeout(() => {
+                    extractButton.textContent = '📄 Extract Text';
+                    extractButton.style.background = '';
+                    extractButton.style.color = '';
+                    extractButton.disabled = false;
+                }, 2000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                resumeTextarea.placeholder = 'Error occurred. Please paste your resume content manually.';
+                resumeTextarea.readOnly = false;
+                resumeHint.innerHTML = '❌ Network error. Please paste your resume content manually.';
+                extractButton.textContent = '❌ Error';
+                extractButton.style.background = 'linear-gradient(135deg, #ea4335 0%, #d32f2f 100%)';
+                extractButton.style.color = 'white';
+                useAttachedCheckbox.checked = false;
+                
+                setTimeout(() => {
+                    extractButton.textContent = '📄 Extract Text';
+                    extractButton.style.background = '';
+                    extractButton.style.color = '';
+                    extractButton.disabled = false;
+                }, 2000);
+            });
+        }
+
+        function generateCoverLetter() {
+            const form = document.getElementById('generateCoverLetterForm');
+            const formData = new FormData(form);
+            const generateButton = document.getElementById('generateButton');
+            const resumeContent = document.getElementById('resumeContent').value.trim();
+            const useAttachedResume = document.getElementById('useAttachedResume').checked;
+            
+            // Validate required fields only if not using attached resume or if extraction failed
+            if (!resumeContent && (!useAttachedResume || document.getElementById('resumeContent').readOnly)) {
+                document.getElementById('resumeContent').style.borderColor = '#ea4335';
+                document.getElementById('resumeContent').focus();
+                
+                setTimeout(() => {
+                    document.getElementById('resumeContent').style.borderColor = '';
+                }, 2000);
+                return;
+            }
+            
+            // Add loading state
+            generateButton.textContent = '🤖 Generating...';
+            generateButton.disabled = true;
+            
+            // Prepare data for backend
+            const coverLetterData = {
+                resume_content: resumeContent,
+                additional_info: document.getElementById('additionalInfo').value.trim(),
+                use_attached_resume: useAttachedResume,
+                _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            };
+            
+            // Make AJAX request to generate cover letter
+            fetch('/applications/{{ $application->id }}/generate-cover-letter', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': coverLetterData._token
+                },
+                body: JSON.stringify(coverLetterData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Display the generated cover letter
+                    document.getElementById('coverLetterContent').textContent = data.cover_letter;
+                    document.getElementById('generatedCoverLetterSection').style.display = 'block';
+                    
+                    // Success state
+                    let successText = '✅ Generated!';
+                    if (data.used_attached_resume) {
+                        successText = '✅ Generated from Resume!';
+                    }
+                    if (data.ai_available && data.ai_provider && data.ai_provider !== 'fallback') {
+                        successText = `🤖 Generated with ${data.ai_provider.toUpperCase()}!`;
+                    }
+                    generateButton.textContent = successText;
+                    generateButton.style.background = 'linear-gradient(135deg, #34a853 0%, #2e7d32 100%)';
+                    
+                    // Scroll to show the generated content
+                    document.getElementById('generatedCoverLetterSection').scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'start' 
+                    });
+                    
+                    setTimeout(() => {
+                        generateButton.textContent = '🔄 Regenerate';
+                        generateButton.style.background = '';
+                        generateButton.disabled = false;
+                    }, 2000);
+                } else {
+                    // Handle error
+                    generateButton.textContent = 'Error - Try Again';
+                    generateButton.style.background = 'linear-gradient(135deg, #ea4335 0%, #d32f2f 100%)';
+                    
+                    setTimeout(() => {
+                        generateButton.textContent = '🤖 Generate Cover Letter';
+                        generateButton.style.background = '';
+                        generateButton.disabled = false;
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                generateButton.textContent = 'Error - Try Again';
+                generateButton.style.background = 'linear-gradient(135deg, #ea4335 0%, #d32f2f 100%)';
+                
+                setTimeout(() => {
+                    generateButton.textContent = '🤖 Generate Cover Letter';
+                    generateButton.style.background = '';
+                    generateButton.disabled = false;
+                }, 3000);
+            });
+        }
+
+        function copyCoverLetter() {
+            const coverLetterText = document.getElementById('coverLetterContent').textContent;
+            
+            if (navigator.clipboard && window.isSecureContext) {
+                // Use the Clipboard API
+                navigator.clipboard.writeText(coverLetterText).then(() => {
+                    showCopyFeedback();
+                }).catch(() => {
+                    fallbackCopyTextToClipboard(coverLetterText);
+                });
+            } else {
+                // Fallback for older browsers
+                fallbackCopyTextToClipboard(coverLetterText);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showCopyFeedback();
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        function showCopyFeedback() {
+            const copyButton = document.querySelector('button[onclick="copyCoverLetter()"]');
+            const originalText = copyButton.textContent;
+            
+            copyButton.textContent = '✅ Copied!';
+            copyButton.style.background = 'linear-gradient(135deg, #34a853 0%, #2e7d32 100%)';
+            copyButton.style.color = 'white';
+            
+            setTimeout(() => {
+                copyButton.textContent = originalText;
+                copyButton.style.background = '';
+                copyButton.style.color = '';
+            }, 2000);
+        }
+
         // Add keyboard navigation
         document.addEventListener('keydown', function(e) {
             const addEventModal = document.getElementById('addEventModalOverlay');
+            const coverLetterModal = document.getElementById('generateCoverLetterModalOverlay');
             
             if (addEventModal && addEventModal.style.display === 'flex') {
-                // Modal is open
+                // Add Event Modal is open
                 if (e.key === 'Escape') {
                     closeAddEventModal();
                 } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
@@ -1897,11 +2244,24 @@
                     e.preventDefault();
                     selectEventType('followup');
                 }
+            } else if (coverLetterModal && coverLetterModal.style.display === 'flex') {
+                // Cover Letter Modal is open
+                if (e.key === 'Escape') {
+                    closeGenerateCoverLetterModal();
+                } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    generateCoverLetter();
+                }
             } else {
-                // Modal is not open
+                // No modal is open
                 if (e.key === 'a' && e.ctrlKey) {
                     e.preventDefault();
                     addEvent();
+                } else if (e.key === 'c' && e.ctrlKey && e.shiftKey) {
+                    e.preventDefault();
+                    @if($application->resume_path)
+                    showGenerateCoverLetterModal();
+                    @endif
                 } else if (e.key === 'Escape') {
                     window.location.href = '{{ route("applications.index") }}';
                 }
