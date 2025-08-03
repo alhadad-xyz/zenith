@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('application_events', function (Blueprint $table) {
             $table->id();
             $table->foreignId('job_application_id')->constrained()->onDelete('cascade');
-            $table->enum('type', ['interview', 'note', 'followup', 'rejected']);
+            $table->enum('type', ['application_submitted', 'interview', 'note', 'followup', 'rejected']);
             $table->string('title');
             $table->text('description')->nullable();
             $table->date('event_date')->nullable();
@@ -24,7 +24,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->string('action')->nullable();
             $table->date('due_date')->nullable();
-            $table->enum('priority', ['high', 'medium', 'low'])->nullable();
+            $table->enum('priority', ['high', 'normal', 'medium', 'low'])->nullable();
             $table->text('details')->nullable();
             $table->boolean('reminder')->default(false);
             $table->string('reason')->nullable(); // For rejected events

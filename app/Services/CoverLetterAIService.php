@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class CoverLetterAIService
 {
-    private const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+    private const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
     private const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
     
     private string $provider;
@@ -30,7 +30,7 @@ class CoverLetterAIService
         }
     }
     
-    public function generateCoverLetter(JobApplication $application, string $resumeContent, ?string $additionalInfo = ''): string
+    public function generateCoverLetter(JobApplication $application, string $resumeContent, ?string $additionalInfo = null): string
     {
         // Ensure additionalInfo is a string
         $additionalInfo = $additionalInfo ?? '';
@@ -62,7 +62,7 @@ class CoverLetterAIService
         }
     }
     
-    private function generateWithGemini(JobApplication $application, string $resumeContent, ?string $additionalInfo): string
+    private function generateWithGemini(JobApplication $application, string $resumeContent, ?string $additionalInfo = null): string
     {
         $prompt = $this->buildPrompt($application, $resumeContent, $additionalInfo);
         
@@ -112,7 +112,7 @@ class CoverLetterAIService
         return trim($data['candidates'][0]['content']['parts'][0]['text']);
     }
     
-    private function generateWithOpenAI(JobApplication $application, string $resumeContent, ?string $additionalInfo): string
+    private function generateWithOpenAI(JobApplication $application, string $resumeContent, ?string $additionalInfo = null): string
     {
         $prompt = $this->buildPrompt($application, $resumeContent, $additionalInfo);
         
@@ -150,7 +150,7 @@ class CoverLetterAIService
         return trim($data['choices'][0]['message']['content']);
     }
     
-    private function buildPrompt(JobApplication $application, string $resumeContent, ?string $additionalInfo): string
+    private function buildPrompt(JobApplication $application, string $resumeContent, ?string $additionalInfo = null): string
     {
         $prompt = "Write a professional cover letter for the following job application:\n\n";
         
@@ -196,24 +196,48 @@ class CoverLetterAIService
         return $prompt;
     }
     
-    private function generateFallbackCoverLetter(JobApplication $application, string $resumeContent, ?string $additionalInfo): string
+    private function generateFallbackCoverLetter(JobApplication $application, string $resumeContent, ?string $additionalInfo = null): string
     {
         $date = now()->format('F j, Y');
         
         $coverLetter = "{$date}\n\nDear Hiring Manager,\n\n";
         
-        $coverLetter .= "I am writing to express my strong interest in the {$application->job_title} position at {$application->company_name}";
+        // Add variation to opening statements
+        $openings = [
+            "I am writing to express my strong interest in the {$application->job_title} position at {$application->company_name}",
+            "I am excited to apply for the {$application->job_title} role at {$application->company_name}",
+            "I would like to submit my application for the {$application->job_title} position with {$application->company_name}",
+            "I am pleased to express my interest in joining {$application->company_name} as a {$application->job_title}"
+        ];
+        
+        $selectedOpening = $openings[array_rand($openings)];
+        $coverLetter .= $selectedOpening;
         
         if ($application->location) {
             $coverLetter .= " in {$application->location}";
         }
         
-        $coverLetter .= ". After reviewing the job requirements and considering my background, I am confident that my skills and experience make me an excellent candidate for this role.\n\n";
+        // Add variation to connecting statements
+        $connections = [
+            ". After reviewing the job requirements and considering my background, I am confident that my skills and experience make me an excellent candidate for this role.\n\n",
+            ". Having thoroughly reviewed the position details, I believe my experience and qualifications align perfectly with your requirements.\n\n",
+            ". Based on my professional background and the role requirements, I am confident I can make a valuable contribution to your team.\n\n",
+            ". My experience and skills directly match what you're looking for in this position, making me an ideal candidate.\n\n"
+        ];
+        
+        $coverLetter .= $connections[array_rand($connections)];
         
         // Try to extract a few key points from resume
         $keyPoints = $this->extractKeyExperience($resumeContent);
         if (!empty($keyPoints)) {
-            $coverLetter .= "My relevant experience includes:\n";
+            $experienceIntros = [
+                "My relevant experience includes:",
+                "Key highlights of my background:",
+                "My professional experience encompasses:",
+                "Notable aspects of my career include:"
+            ];
+            
+            $coverLetter .= $experienceIntros[array_rand($experienceIntros)] . "\n";
             foreach ($keyPoints as $point) {
                 $coverLetter .= "• {$point}\n";
             }
@@ -224,7 +248,15 @@ class CoverLetterAIService
             $coverLetter .= trim($additionalInfo) . "\n\n";
         }
         
-        $coverLetter .= "I am excited about the opportunity to contribute to {$application->company_name}'s success and would welcome the chance to discuss how my background aligns with your needs. Thank you for considering my application.\n\n";
+        // Add variation to closing statements
+        $closings = [
+            "I am excited about the opportunity to contribute to {$application->company_name}'s success and would welcome the chance to discuss how my background aligns with your needs.",
+            "I would be thrilled to bring my skills and enthusiasm to {$application->company_name} and would appreciate the opportunity to discuss my qualifications further.",
+            "I am eager to contribute to {$application->company_name}'s continued growth and would love to discuss how I can add value to your team.",
+            "I look forward to the possibility of joining {$application->company_name} and contributing to your team's success."
+        ];
+        
+        $coverLetter .= $closings[array_rand($closings)] . " Thank you for considering my application.\n\n";
         
         $coverLetter .= "Sincerely,\n[Your Name]";
         
