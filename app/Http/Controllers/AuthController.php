@@ -7,7 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
@@ -94,6 +96,45 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
         
         return redirect()->route('auth.page');
+    }
+
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->redirect();
+    }
+
+    public function handleGoogleCallback()
+    {
+        try {
+            $googleUser = Socialite::driver('google')->user();
+            
+            // Check if user exists with this email
+            $user = User::where('email', $googleUser->getEmail())->first();
+            
+            if ($user) {
+                // Update existing user with Google info
+                $user->update([
+                    'google_id' => $googleUser->getId(),
+                    'avatar' => $googleUser->getAvatar(),
+                ]);
+            } else {
+                // Create new user
+                $user = User::create([
+                    'name' => $googleUser->getName(),
+                    'email' => $googleUser->getEmail(),
+                    'google_id' => $googleUser->getId(),
+                    'avatar' => $googleUser->getAvatar(),
+                    'password' => Hash::make(Str::random(24)), // Random password since they'll use Google
+                ]);
+            }
+            
+            Auth::login($user);
+            
+            return redirect()->route('dashboard');
+            
+        } catch (\Exception $e) {
+            return redirect()->route('auth.page')->with('error', 'Unable to login with Google. Please try again.');
+        }
     }
 
     public function dashboard()

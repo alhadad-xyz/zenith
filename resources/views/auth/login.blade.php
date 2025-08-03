@@ -1066,7 +1066,7 @@
         });
 
         function signInWithGoogle() {
-            console.log('Google Sign-In not implemented yet');
+            window.location.href = '{{ route("auth.google") }}';
         }
 
         // Initialize everything when DOM is loaded
