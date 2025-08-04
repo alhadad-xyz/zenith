@@ -187,8 +187,8 @@ Zenith is a cutting-edge, AI-powered job application tracking system that revolu
 
 1. **📥 Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/zenith-app.git
-   cd zenith-app
+   git clone https://github.com/yourusername/zenith.git
+   cd zenith
    ```
 
 2. **📦 Install dependencies**
@@ -310,7 +310,7 @@ npm run build && php artisan optimize
 ## 📁 Project Structure
 
 ```
-🚀 zenith-app/
+🚀 zenith/
 ├── 🎛️ app/
 │   ├── 🌐 Http/Controllers/     # Application controllers
 │   │   ├── JobApplicationController.php    # Main application CRUD
@@ -522,7 +522,7 @@ MAIL_PORT=587
 MAIL_USERNAME=your_email@gmail.com
 MAIL_PASSWORD=your_app_password
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS=noreply@zenith-app.com
+MAIL_FROM_ADDRESS=noreply@zenith.com
 MAIL_FROM_NAME="Zenith Job Tracker"
 ```
 
@@ -620,7 +620,7 @@ composer dump-autoload --optimize
 server {
     listen 80;
     server_name your-domain.com;
-    root /var/www/zenith-app/public;
+    root /var/www/zenith/public;
     
     index index.php;
     
@@ -666,17 +666,17 @@ SESSION_ENCRYPT=true
 #### 4. **🔒 File Permissions**
 ```bash
 # Set proper ownership
-sudo chown -R www-data:www-data /var/www/zenith-app
+sudo chown -R www-data:www-data /var/www/zenith
 
 # Set directory permissions
-sudo find /var/www/zenith-app -type d -exec chmod 755 {} \;
+sudo find /var/www/zenith -type d -exec chmod 755 {} \;
 
 # Set file permissions
-sudo find /var/www/zenith-app -type f -exec chmod 644 {} \;
+sudo find /var/www/zenith -type f -exec chmod 644 {} \;
 
 # Storage and cache permissions
-sudo chmod -R 775 /var/www/zenith-app/storage
-sudo chmod -R 775 /var/www/zenith-app/bootstrap/cache
+sudo chmod -R 775 /var/www/zenith/storage
+sudo chmod -R 775 /var/www/zenith/bootstrap/cache
 ```
 
 ### 🐳 Docker Deployment
@@ -684,15 +684,15 @@ sudo chmod -R 775 /var/www/zenith-app/bootstrap/cache
 #### **Single Container Deployment**
 ```bash
 # Build production image
-docker build -t zenith-app:latest .
+docker build -t zenith:latest .
 
 # Run with environment variables
 docker run -d \
-  --name zenith-app \
+  --name zenith \
   -p 80:8000 \
   -e APP_ENV=production \
   -e DB_HOST=your-db-host \
-  zenith-app:latest
+  zenith:latest
 ```
 
 #### **Docker Compose Deployment**
@@ -727,12 +727,12 @@ volumes:
 #### **🔵 DigitalOcean App Platform**
 ```yaml
 # .do/app.yaml
-name: zenith-app
+name: zenith
 services:
 - name: web
   source_dir: /
   github:
-    repo: your-username/zenith-app
+    repo: alhadad-xyz/zenith
     branch: main
   run_command: php artisan serve --host=0.0.0.0 --port=$PORT
   environment_slug: php
@@ -750,8 +750,8 @@ sudo apt update
 sudo apt install nginx mysql-server php8.2-fpm php8.2-mysql composer nodejs npm
 
 # Deploy application
-git clone https://github.com/your-username/zenith-app.git
-cd zenith-app
+git clone https://github.com/alhadad-xyz/zenith.git
+cd zenith
 composer install --no-dev --optimize-autoloader
 npm ci --only=production && npm run build
 
@@ -795,8 +795,8 @@ We welcome contributions to make Zenith even better! Whether you're fixing bugs,
 
 1. **🍴 Fork the repository**
    ```bash
-   git clone https://github.com/your-username/zenith-app.git
-   cd zenith-app
+   git clone https://github.com/alhadad-xyz/zenith.git
+   cd zenith
    ```
 
 2. **🌿 Create a feature branch**
@@ -967,8 +967,8 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 If you need assistance with Zenith:
 
 1. **📚 Documentation**: Check this comprehensive README first
-2. **🐛 Issues**: [Create an issue](https://github.com/your-username/zenith-app/issues) for bugs or feature requests
-3. **💬 Discussions**: Use [GitHub Discussions](https://github.com/your-username/zenith-app/discussions) for questions
+2. **🐛 Issues**: [Create an issue](https://github.com/alhadad-xyz/zenith/issues) for bugs or feature requests
+3. **💬 Discussions**: Use [GitHub Discussions](https://github.com/alhadad-xyz/zenith/discussions) for questions
 4. **📧 Email**: Contact the maintainers for security issues
 
 ### 🌟 Show Your Support
@@ -983,10 +983,10 @@ If Zenith helps you land your dream job, consider:
 
 ### 📊 Project Stats
 
-![GitHub stars](https://img.shields.io/github/stars/your-username/zenith-app?style=social)
-![GitHub forks](https://img.shields.io/github/forks/your-username/zenith-app?style=social)
-![GitHub issues](https://img.shields.io/github/issues/your-username/zenith-app)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/your-username/zenith-app)
+![GitHub stars](https://img.shields.io/github/stars/alhadad-xyz/zenith?style=social)
+![GitHub forks](https://img.shields.io/github/forks/alhadad-xyz/zenith?style=social)
+![GitHub issues](https://img.shields.io/github/issues/alhadad-xyz/zenith)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/alhadad-xyz/zenith)
 
 ---
 
